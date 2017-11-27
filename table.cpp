@@ -12,32 +12,37 @@ enum ColumnType {
     SignalCh1,
     MeasureDeltaCh1,
     MeasurePpmCh1,
-    MeasureCh1,
+    MeasureCh1
+};
+
+enum {
+    RowCount = 16,
+    ColumnCount = 9
 };
 
 TABLE::TABLE(QWidget* parent)
-    : QTableWidget(16, 9, parent)
-    , dataChanged(false)
-    , data(16)
-    , average(16)
-    , cellText(16)
-    , resistors({ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 })
+    : QTableWidget(RowCount, ColumnCount, parent)
+    , m_dataChanged(false)
+    , m_resistors({ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 })
+    , m_average(RowCount)
+    , m_data(RowCount)
+    , m_cellText(RowCount)
 #ifdef EXCEL
     , excel(new Excel::Application(this))
 #endif
 {
-    for (QVector<QVector<double> >& v : data) {
+    for (QVector<QVector<double> >& v : m_data) {
         v.resize(6);
         for (QVector<double>& d : v) {
             d.fill(0.0, 1);
-        };
+        }
     }
 
-    for (QVector<double>& v : average) {
+    for (QVector<double>& v : m_average) {
         v.fill(0.0, 6);
     }
 
-    for (QVector<QVector<QString> >& v : cellText) {
+    for (QVector<QVector<QString> >& v : m_cellText) {
         v.resize(5);
         int i = 0;
         for (QVector<QString>& d : v) {
@@ -45,11 +50,7 @@ TABLE::TABLE(QWidget* parent)
             case RowNum:
                 break;
             case SignalCh0:
-                d.fill("", 6);
-                break;
             case MeasureDeltaCh0:
-                d.fill("", 6);
-                break;
             case MeasurePpmCh0:
                 d.fill("", 6);
                 break;
@@ -93,9 +94,9 @@ TABLE::TABLE(QWidget* parent)
                 break;
             }
         }
-        Update(row);
+        updateRow(row);
     }
-    dataChanged = true;
+    m_dataChanged = true;
     resizeEvent(0);
 
     setColumnHidden(MeasureDeltaCh0, true);
@@ -109,6 +110,7 @@ TABLE::TABLE(QWidget* parent)
                 item(Item->row(), col)->setFlags(Item->checkState() == Qt::Checked ? Qt::ItemIsEnabled : Qt::NoItemFlags);
             }
         }
+
     });
 
     setIconSize(QSize(24, 24));
@@ -125,14 +127,14 @@ TABLE::~TABLE()
 #endif
 }
 
-void TABLE::LoadFile(const QString& fileName)
+void TABLE::loadFile(const QString& fileName)
 {
     qDebug() << "LoadFile" << fileName;
 #ifdef EXCEL
     if (!excel->isNull()) {
         Excel::_Workbook pWb(0, excel->Workbooks()->querySubObject("Open(const QString&)", fileName) /*->Open(fileName)*/);
         if (excel->Workbooks()->Count()) {
-            for (int devCh = 0; devCh < 16; ++devCh) {
+            for (int devCh = 0; devCh < RowCount; ++devCh) {
                 for (int adcCh = 0; adcCh < 2; ++adcCh) {
                     for (int resCh = 0; resCh < 3; ++resCh) {
                         data[devCh][adcCh * 3 + resCh].clear();
@@ -151,19 +153,19 @@ void TABLE::LoadFile(const QString& fileName)
         }
     }
 #else
-    curFile = fileName;
+    m_curFile = fileName;
     QAxObject* excel = new QAxObject("Excel.Application", 0);
     excel->dynamicCall("SetVisible(bool)", true);
     QAxObject* workbooks = excel->querySubObject("Workbooks");
-    QAxObject* workbook = workbooks->querySubObject("Open(const QString&)", curFile);
+    QAxObject* workbook = workbooks->querySubObject("Open(const QString&)", m_curFile);
     QAxObject* sheets = workbook->querySubObject("Worksheets");
     QVariant value;
     if (workbooks->dynamicCall("Count()").toInt()) {
         QAxObject* sheet = sheets->querySubObject("Item(int)", 1);
-        for (int devCh = 0; devCh < 16; ++devCh) {
+        for (int devCh = 0; devCh < RowCount; ++devCh) {
             for (int adcCh = 0; adcCh < 2; ++adcCh) {
                 for (int resCh = 0; resCh < 3; ++resCh) {
-                    data[devCh][adcCh * 3 + resCh].clear();
+                    m_data[devCh][adcCh * 3 + resCh].clear();
                     if (!adcCh) {
                         QAxObject* cell = sheet->querySubObject("Cells(int,int)", 6 + devCh * 3 + resCh, 4);
                         value = cell->dynamicCall("Value()");
@@ -172,13 +174,13 @@ void TABLE::LoadFile(const QString& fileName)
                         QAxObject* cell = sheet->querySubObject("Cells(int,int)", 6 + devCh * 3 + resCh, 7);
                         value = cell->dynamicCall("Value()");
                     }
-                    data[devCh][adcCh * 3 + resCh].append(value.toDouble());
+                    m_data[devCh][adcCh * 3 + resCh].append(value.toDouble());
                 }
             }
-            Update(devCh);
+            updateRow(devCh);
         }
         workbook->dynamicCall("Close()");
-        dataChanged = true;
+        m_dataChanged = true;
         resizeEvent(0);
     }
     excel->dynamicCall("Quit()");
@@ -186,7 +188,7 @@ void TABLE::LoadFile(const QString& fileName)
 #endif
 }
 
-void TABLE::SaveFile(const QString& fileName, const QString& asptNum, const QString& fio)
+void TABLE::saveFile(const QString& fileName, const QString& asptNum, const QString& fio)
 {
     qDebug() << "SaveFile" << fileName << asptNum << fio;
 #ifdef EXCEL
@@ -201,7 +203,7 @@ void TABLE::SaveFile(const QString& fileName, const QString& asptNum, const QStr
         excel->Range("E2")->SetValue(asptNum);
         excel->Range("D57")->SetValue(fio);
         excel->Range("D56")->SetValue(QDateTime::currentDateTime());
-        for (int devCh = 0; devCh < 16; ++devCh) {
+        for (int devCh = 0; devCh < RowCount; ++devCh) {
             for (int adcCh = 0; adcCh < 2; ++adcCh) {
                 for (int resCh = 0; resCh < 3; ++resCh) {
                     int num;
@@ -242,11 +244,11 @@ void TABLE::SaveFile(const QString& fileName, const QString& asptNum, const QStr
     QAxObject* excel = new QAxObject("Excel.Application", 0);
     excel->dynamicCall("SetVisible(bool)", true);
     QAxObject* workbooks = excel->querySubObject("Workbooks");
-    if (curFile.isEmpty()) {
-        curFile = qApp->applicationDirPath() + "/XX-XX от XX.XX.XX г.xlsx";
+    if (m_curFile.isEmpty()) {
+        m_curFile = qApp->applicationDirPath() + "/blank.xlsx";
         newFile = true;
     }
-    QAxObject* workbook = workbooks->querySubObject("Open(const QString&)", curFile);
+    QAxObject* workbook = workbooks->querySubObject("Open(const QString&)", m_curFile);
     QAxObject* sheets = workbook->querySubObject("Worksheets");
     if (workbooks->dynamicCall("Count()").toInt()) {
         QAxObject* sheet = sheets->querySubObject("Item(int)", 1);
@@ -261,8 +263,7 @@ void TABLE::SaveFile(const QString& fileName, const QString& asptNum, const QStr
         cell->dynamicCall("SetValue2(QVariant)", fio);
         cell = sheet->querySubObject("Cells(int,int)", 56, 4);
         cell->dynamicCall("SetValue2(QVariant)", QDateTime::currentDateTime());
-        double v = 0.0;
-        for (int devCh = 0; devCh < 16; ++devCh) {
+        for (int devCh = 0; devCh < RowCount; ++devCh) {
             for (int adcCh = 0; adcCh < 2; ++adcCh) {
                 for (int resCh = 0; resCh < 3; ++resCh) {
                     QAxObject* cell;
@@ -272,10 +273,10 @@ void TABLE::SaveFile(const QString& fileName, const QString& asptNum, const QStr
                     else {
                         cell = sheet->querySubObject("Cells(int,int)", 6 + devCh * 3 + resCh, 7);
                     }
-                    cell->dynamicCall("SetValue2(QVariant)", average[devCh][adcCh * 3 + resCh]);
+                    cell->dynamicCall("SetValue2(QVariant)", m_average[devCh][adcCh * 3 + resCh]);
                 }
             }
-            Update(devCh);
+            updateRow(devCh);
         }
         if (newFile) {
             workbook->dynamicCall("SaveAs(const QVariant&)", QVariant(QString(fileName).replace('/', '\\')));
@@ -290,7 +291,7 @@ void TABLE::SaveFile(const QString& fileName, const QString& asptNum, const QStr
 #endif
 }
 
-void TABLE::PrintFile(const QString& fileName)
+void TABLE::printFile(const QString& fileName)
 {
     qDebug() << "PrintFile" << fileName;
 #ifdef EXCEL
@@ -317,104 +318,104 @@ void TABLE::PrintFile(const QString& fileName)
 #endif
 }
 
-void TABLE::Update(int row)
+void TABLE::updateRow(int row)
 {
-    for (int i = 0; i < 6; ++i) {
-        Update(row, i);
-    }
+    for (int i = 0; i < 6; ++i)
+        updateRow(row, i);
 }
 
-void TABLE::Update(int row, int pos)
+void TABLE::updateRow(int row, int pos)
 {
     double delta;
     double min_ = 0.0;
     double max_ = 0.0;
 
-    if (data[row][pos].count()) {
-        QVector<double> v(data[row][pos]);
+    if (m_data[row][pos].count()) {
+        QVector<double> v(m_data[row][pos]);
         qSort(v);
         min_ = v.first();
         max_ = v.last();
-        average[row][pos] = 0;
-        if (v.count() > skip) {
-            for (int i = ceil(skip * 0.5); i < (data[row][pos].count() - floor(skip * 0.5)); ++i) {
-                average[row][pos] += v[i];
+        m_average[row][pos] = 0;
+        if (v.count() > m_skip) {
+            for (int i = static_cast<int>(ceil(m_skip * 0.5)); i < (m_data[row][pos].count() - floor(m_skip * 0.5)); ++i) {
+                m_average[row][pos] += v[i];
             }
-            average[row][pos] /= v.count() - skip;
+            m_average[row][pos] /= v.count() - m_skip;
         }
         else {
             for (double val : v) {
-                average[row][pos] += val;
+                m_average[row][pos] += val;
             }
-            average[row][pos] /= v.count();
+            m_average[row][pos] /= v.count();
         }
     }
 
     int i = (pos % 3);
 
-    cellText[row][SignalCh0][pos] = QString("R%1 = %2%3")
-                                        .arg(i + 1)
-                                        .arg(average[row][pos], 0, 'f', 5)
-                                        .arg(i < 2 ? "\n" : "")
-                                        .replace('.', ',');
+    m_cellText[row][SignalCh0][pos] = QString("R%1 = %2%3")
+                                          .arg(i + 1)
+                                          .arg(m_average[row][pos], 0, 'f', 5)
+                                          .arg(i < 2 ? "\n" : "")
+                                          .replace('.', ',');
 
-    cellText[row][MeasureDeltaCh0][pos] = QString("%1%2")
-                                              .arg((max_ - min_) * 1000.0, 0, 'g', 3)
-                                              .arg(i < 2 ? "\n" : "")
-                                              .replace('.', ',');
+    m_cellText[row][MeasureDeltaCh0][pos] = QString("%1%2")
+                                                .arg((max_ - min_) * 1000.0, 0, 'g', 3)
+                                                .arg(i < 2 ? "\n" : "")
+                                                .replace('.', ',');
 
-    cellText[row][MeasurePpmCh0][pos] = QString("%1%2")
-                                            .arg(resistors[i] > 0.0 ? ((average[row][pos] / resistors[i]) - 1.0) * 1.e6 : 0.0, 0, 'g', 4)
-                                            .arg(i < 2 ? "\n" : "");
+    m_cellText[row][MeasurePpmCh0][pos] = QString("%1%2")
+                                              .arg(m_resistors[i] > 0.0 ? ((m_average[row][pos] / m_resistors[i]) - 1.0) * 1.e6 : 0.0, 0, 'g', 4)
+                                              .arg(i < 2 ? "\n" : "");
 
     QColor color;
     if (pos < 3) {
-        delta = average[row][0] + average[row][1] - average[row][2];
-        cellText[row][MeasureCh0][0] = QString("%1%2").arg(delta < 0 ? "" : "").arg(delta, 0, 'f', 6).replace('.', ',');
+        delta = m_average[row][0] + m_average[row][1] - m_average[row][2];
+        m_cellText[row][MeasureCh0][0] = QString("%1%2").arg(delta < 0 ? "" : "").arg(delta, 0, 'f', 6).replace('.', ',');
     }
     else {
-        delta = average[row][3] + average[row][4] - average[row][5];
-        cellText[row][MeasureCh0][1] = QString("%1%2").arg(delta < 0 ? "" : "").arg(delta, 0, 'f', 6).replace('.', ',');
+        delta = m_average[row][3] + m_average[row][4] - m_average[row][5];
+        m_cellText[row][MeasureCh0][1] = QString("%1%2").arg(delta < 0 ? "" : "").arg(delta, 0, 'f', 6).replace('.', ',');
     }
 
     delta = abs(delta);
     QIcon icon;
-    if (delta > max) {
+
+    if (delta > m_max || delta == 0.0) {
         color = QColor::fromHsv(0, 50, 255);
         icon = QIcon("icon1.svg");
     }
-    else if (delta < min) {
+    else if (delta < m_min) {
         color = QColor::fromHsv(120, 50, 255);
         icon = QIcon("icon2.svg");
     }
     else {
-        color = QColor::fromHsv(120 - ((120 / (max - min)) * (delta - min)), 50, 255);
+        color = QColor::fromHsv(120 - static_cast<int>((120 / (m_max - m_min)) * (delta - m_min)), 50, 255);
         icon = QIcon("icon3.svg");
     }
 
     if (pos < 3) {
-        item(row, SignalCh0)->setText(cellText[row][SignalCh0][0] + cellText[row][SignalCh0][1] + cellText[row][SignalCh0][2]);
-        item(row, MeasureDeltaCh0)->setText(cellText[row][MeasureDeltaCh0][0] + cellText[row][MeasureDeltaCh0][1] + cellText[row][MeasureDeltaCh0][2]);
-        item(row, MeasurePpmCh0)->setText(cellText[row][MeasurePpmCh0][0] + cellText[row][MeasurePpmCh0][1] + cellText[row][MeasurePpmCh0][2]);
-        item(row, MeasureCh0)->setText(cellText[row][MeasureCh0][0]);
+        item(row, SignalCh0)->setText(m_cellText[row][SignalCh0][0] + m_cellText[row][SignalCh0][1] + m_cellText[row][SignalCh0][2]);
+        item(row, MeasureDeltaCh0)->setText(m_cellText[row][MeasureDeltaCh0][0] + m_cellText[row][MeasureDeltaCh0][1] + m_cellText[row][MeasureDeltaCh0][2]);
+        item(row, MeasurePpmCh0)->setText(m_cellText[row][MeasurePpmCh0][0] + m_cellText[row][MeasurePpmCh0][1] + m_cellText[row][MeasurePpmCh0][2]);
+        item(row, MeasureCh0)->setText(m_cellText[row][MeasureCh0][0]);
         item(row, MeasureCh0)->setBackgroundColor(color);
         //item(row, MeasureCh0)->setForeground(Qt::black);
         item(row, MeasureCh0)->setIcon(icon);
     }
     else {
-        item(row, SignalCh1)->setText(cellText[row][SignalCh0][3] + cellText[row][SignalCh0][4] + cellText[row][SignalCh0][5]);
-        item(row, MeasureDeltaCh1)->setText(cellText[row][MeasureDeltaCh0][3] + cellText[row][MeasureDeltaCh0][4] + cellText[row][MeasureDeltaCh0][5]);
-        item(row, MeasurePpmCh1)->setText(cellText[row][MeasurePpmCh0][3] + cellText[row][MeasurePpmCh0][4] + cellText[row][MeasurePpmCh0][5]);
-        item(row, MeasureCh1)->setText(cellText[row][MeasureCh0][1]);
+        item(row, SignalCh1)->setText(m_cellText[row][SignalCh0][3] + m_cellText[row][SignalCh0][4] + m_cellText[row][SignalCh0][5]);
+        item(row, MeasureDeltaCh1)->setText(m_cellText[row][MeasureDeltaCh0][3] + m_cellText[row][MeasureDeltaCh0][4] + m_cellText[row][MeasureDeltaCh0][5]);
+        item(row, MeasurePpmCh1)->setText(m_cellText[row][MeasurePpmCh0][3] + m_cellText[row][MeasurePpmCh0][4] + m_cellText[row][MeasurePpmCh0][5]);
+        item(row, MeasureCh1)->setText(m_cellText[row][MeasureCh0][1]);
         item(row, MeasureCh1)->setBackgroundColor(color);
         //item(row, MeasureCh1)->setForeground(Qt::black);
         item(row, MeasureCh1)->setIcon(icon);
     }
 }
 
-void TABLE::CheckUncheckAll(bool checked)
+void TABLE::checkUncheckAll(bool checked)
 {
-    for (int row = 0; row < 16; ++row) {
+    for (int row = 0; row < RowCount; ++row) {
         item(row, 0)->setCheckState(checked ? Qt::Checked : Qt::Unchecked);
         for (int col = 1; col < columnCount(); ++col) {
             item(row, col)->setFlags(checked ? Qt::ItemIsEnabled : Qt::NoItemFlags);
@@ -422,38 +423,39 @@ void TABLE::CheckUncheckAll(bool checked)
     }
 }
 
-void TABLE::CheckPpm(bool checked)
+void TABLE::enablePpm(bool checked)
 {
     setColumnHidden(MeasurePpmCh0, !checked);
     setColumnHidden(MeasurePpmCh1, !checked);
-    dataChanged = true;
+    m_dataChanged = true;
     resizeEvent(0);
 }
 
-void TABLE::CheckDelta(bool checked)
+void TABLE::enableDelta(bool checked)
 {
     setColumnHidden(MeasureDeltaCh0, !checked);
     setColumnHidden(MeasureDeltaCh1, !checked);
-    dataChanged = true;
+    m_dataChanged = true;
     resizeEvent(0);
 }
 
 void TABLE::clearSelectedData()
 {
     QList<int> rows;
-    for (int row = 0; row < 16; ++row) {
-        if (item(row, 0)->checkState() == Qt::Checked)
+    for (int row = 0; row < RowCount; ++row) {
+        if (item(row, 0)->checkState() == Qt::Checked) {
             rows.append(row);
+        }
     }
     if (rows.size()) {
         if (QMessageBox::question(this, "", "Вы действительно хотите отчистить выделенные каналы?", "Да", "Нет", "", 1, 1) == 0) {
             for (int row : rows) {
-                for (QVector<double>& v : data[row]) {
+                for (QVector<double>& v : m_data[row]) {
                     v.fill(0.0, 1);
                 }
-                Update(row);
+                updateRow(row);
             }
-            dataChanged = true;
+            m_dataChanged = true;
             resizeEvent(0);
         }
     }
@@ -461,97 +463,105 @@ void TABLE::clearSelectedData()
 
 void TABLE::clearData(int row)
 {
-    if (0 > row || row > 15)
+    if (0 > row || row > 15) {
         return;
-    for (QVector<double>& v : data[row]) {
+    }
+    for (QVector<double>& v : m_data[row]) {
         v.clear();
     }
 }
 
-void TABLE::setResistors(const QVector<double>&& value)
+void TABLE::setResistorsValue(const QVector<double>&& value)
 {
-    resistors = value;
+    m_resistors = value;
 }
 
 void TABLE::resizeEvent(QResizeEvent* event)
 {
-    if (event != nullptr)
+    if (event != nullptr) {
         event->accept();
+    }
     //    static QSize Size;
     //    if (Size != size() || dataChanged) {
-    if (dataChanged) {
+    if (m_dataChanged) {
         resizeColumnsToContents();
         resizeRowsToContents();
     }
     int ColumnWidth = (size().width() - 2) - (columnWidth(RowNum) + columnWidth(SignalCh0) + columnWidth(SignalCh1));
-    if (!isColumnHidden(MeasureDeltaCh0))
+    if (!isColumnHidden(MeasureDeltaCh0)) {
         ColumnWidth -= (columnWidth(MeasureDeltaCh0) + columnWidth(MeasureDeltaCh1));
-    if (!isColumnHidden(MeasurePpmCh0))
+    }
+    if (!isColumnHidden(MeasurePpmCh0)) {
         ColumnWidth -= (columnWidth(MeasurePpmCh0) + columnWidth(MeasurePpmCh1));
-    if (verticalScrollBar()->isVisible())
+    }
+    if (verticalScrollBar()->isVisible()) {
         ColumnWidth -= verticalScrollBar()->width();
-    setColumnWidth(MeasureCh0, ColumnWidth / 2.0);
-    setColumnWidth(MeasureCh1, ColumnWidth / 2.0);
-    dataChanged = false;
+    }
+    setColumnWidth(MeasureCh0, static_cast<int>(ColumnWidth / 2.0));
+    setColumnWidth(MeasureCh1, static_cast<int>(ColumnWidth / 2.0));
+    m_dataChanged = false;
     //    Size = size();
     //    }
     update();
 }
 
-void TABLE::setCurFile(const QString& value)
+void TABLE::setCurrentFile(const QString& value)
 {
-    curFile = value;
+    m_curFile = value;
 }
 
-void TABLE::setEnableRow(bool fl)
+void TABLE::enableRow(bool checked)
 {
-    if (fl)
-        for (int row = 0; row < 16; ++row) {
+    if (checked) {
+        for (int row = 0; row < RowCount; ++row) {
             item(row, 0)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
         }
-    else
-        for (int row = 0; row < 16; ++row) {
+    }
+    else {
+        for (int row = 0; row < RowCount; ++row) {
             item(row, 0)->setFlags(Qt::ItemIsEnabled);
         }
+    }
 }
 
 QVector<double> TABLE::getData(int row, int pos) const
 {
-    return data[row][pos];
+    return m_data[row][pos];
 }
 
-void TABLE::addData(int row, int pos, double val)
+void TABLE::addData(int row, int pos, double value)
 {
-    data[row][pos].append(val);
-    Update(row, pos);
-    dataChanged = true;
+    m_data[row][pos].append(value);
+    updateRow(row, pos);
+    m_dataChanged = true;
     resizeEvent(0);
     emit updatePlot(row);
 }
 
 void TABLE::setSkip(int value)
 {
-    skip = value;
+    m_skip = value;
 }
 
 void TABLE::setMax(double value)
 {
-    max = value;
-    dataChanged = true;
+    m_max = value;
+    m_dataChanged = true;
 }
 
 void TABLE::setMin(double value)
 {
-    min = value;
-    dataChanged = true;
+    m_min = value;
+    m_dataChanged = true;
 }
 
 void TABLE::showEvent(QShowEvent* event)
 {
     event->accept();
-    if (dataChanged)
+    if (m_dataChanged) {
         for (int row = 0; row < rowCount(); ++row) {
-            Update(row);
+            updateRow(row);
         }
+    }
     resizeEvent(0);
 }

@@ -22,48 +22,51 @@ public:
     explicit TABLE(QWidget* parent = 0);
     ~TABLE();
 
-    void LoadFile(const QString& fileName);
-    void SaveFile(const QString& fileName, const QString& asptNum, const QString& fio);
-    void PrintFile(const QString& fileName);
+    void loadFile(const QString& fileName);
+    void saveFile(const QString& fileName, const QString& asptNum, const QString& fio);
+    void printFile(const QString& fileName);
 
-    void CheckUncheckAll(bool checked);
-    void CheckPpm(bool checked);
-    void CheckDelta(bool checked);
+    void checkUncheckAll(bool checked);
+
     void clearSelectedData();
     void clearData(int row);
-    void Update(int row);
-    void Update(int row, int pos);
+    void updateRow(int row);
+    void updateRow(int row, int pos);
 
     void setMax(double value);
     void setMin(double value);
-    void setResistors(const QVector<double>&& value);
-    void setCurFile(const QString& value);
-    void setEnableRow(bool fl);
+    void setResistorsValue(const QVector<double>&& value);
+    void setCurrentFile(const QString& value);
+
+    void enableRow(bool checked);
+    void enablePpm(bool checked);
+    void enableDelta(bool checked);
 
     QVector<double> getData(int row, int pos) const;
-    void addData(int row, int pos, double val);
+    void addData(int row, int pos, double value);
     void setSkip(int value);
 
 signals:
     void updatePlot(int chNum);
 
-public slots:
-
 private:
-    QVector<double> resistors;
-    double max = 0.0001;
-    double min = 0.001;
-    int skip = 0;
+    bool m_dataChanged;
+
+    double m_max = 0.0001;
+    double m_min = 0.001;
+
+    int m_skip = 0;
+
+    QString m_curFile;
+
+    QVector<double> m_resistors;
+    QVector<QVector<double> > m_average;
+    QVector<QVector<QVector<double> > > m_data;
+    QVector<QVector<QVector<QString> > > m_cellText;
+
 #ifdef EXCEL
     Excel::Application* excel;
 #endif
-    QString curFile;
-
-    QVector<QVector<QVector<double> > > data;
-    QVector<QVector<double> > average;
-    QVector<QVector<QVector<QString> > > cellText;
-    bool dataChanged;
-
     // QWidget interface
 protected:
     virtual void resizeEvent(QResizeEvent* event) override;

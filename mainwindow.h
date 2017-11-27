@@ -11,9 +11,12 @@
 #include <QTimer>
 #include <QtWinExtras>
 #include <QEvent>
+#include <QLineSeries>
 
-#include "aspt_upn.h"
 #include "table.h"
+#include "measuring_interface/measuringinterface.h"
+
+QT_CHARTS_USE_NAMESPACE
 
 class QAction;
 class QMenu;
@@ -38,9 +41,6 @@ private:
     Ui::MainWindow* ui;
     QIcon Start;
     QIcon Stop;
-    AsptUpn* asptUpn;
-    QThread Thread;
-
 
     QString messageTitle;
 
@@ -59,23 +59,23 @@ signals:
     void goFindDevices();
     void goMeasure(const QVector<QPair<int, int> >&, int);
     void stopWork();
-    void setResistor(int);
 
 private slots:
     //////////////////////////////////////////////////////////////////////////////////////
     void updatePlot(int chNum);
-    void setupPlot(QCustomPlot* plot, const QString& label);
     void on_pbUpnRead_clicked();
     void on_pbUpnWrite_clicked();
     void setProgressVisible(bool fl);
+
+    void currentIndexChanged(int index);
 
 private:
     void connectObjects();
     //    void startStopMeasure(bool checked = false);
     void ResistorClicked();
     //////////////////////////////////////////////////////////////////////////////////////
-    void handleDeviceFound(Device dev, const QString& portName, double num);
-    void handleMessage(MessageType i, int row);
+    void handleDeviceFound(eDevice dev, const QString& portName, double num);
+    void handleMessage(eMessageType i, int row);
     void handleMeasure(const double value, int ch, int r);
     //////////////////////////////////////////////////////////////////////////////////////
     void readSettings();
@@ -108,6 +108,8 @@ private:
     QAction* aboutQtAct;
     QAction* separatorAct;
     QAction* printAct;
+
+    QVector<QLineSeries*> series;
 
     QElapsedTimer elapsedTimer;
     int elapsedMs;

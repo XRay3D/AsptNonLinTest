@@ -1,10 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/image2.png</file>
-        <file>res/image3.png</file>
-        <file>res/image4.png</file>
-        <file>res/image5.png</file>
-        <file>res/image6.png</file>
         <file>res/image10.png</file>
     </qresource>
 </RCC>

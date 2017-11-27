@@ -4,42 +4,19 @@
 #
 #-------------------------------------------------
 
-QT       += core gui serialport widgets printsupport multimedia
+QT += core gui serialport widgets multimedia charts
 
 TARGET = AsptNonLinTest
 TEMPLATE = app
-
-#QMAKE_LFLAGS_DEBUG += /INCREMENTAL:NO
-#DEFINES += EXCEL
 
 CONFIG += c++11 #console
 
 win32:RC_FILE = myapp.rc
 win32:QT += winextras axcontainer
 
-SOURCES += \
-    aspt.cpp \
-    aspt_upn.cpp \
-    excel.cpp \
-    main.cpp\
-    mainwindow.cpp \
-    myprotocol.cpp \
-    qcustomplot.cpp \
-    table.cpp
+FORMS += mainwindow.ui
 
-HEADERS  += \
-    aspt.h \
-    aspt_upn.h \
-    excel.h \
-    mainwindow.h \
-    myprotocol.h \
-    qcustomplot.h \
-    table.h
-
-
-FORMS    += mainwindow.ui
-
-#RESOURCES += res.qrc
+RESOURCES += res.qrc
 
 win32:LIBS += -lwinmm
 
@@ -48,4 +25,34 @@ DISTFILES += \
     res/icon1.svg \
     res/icon2.svg \
     res/icon3.svg \
-    res/blank.xlsx
+    res/blank.xlsx \
+    measuring_interface/ini.txt
+
+HEADERS += \
+    excel.h \
+    mainwindow.h \
+    measuring_interface/Aspt5/adccfg.h \
+    measuring_interface/Aspt5/aspt.h \
+    measuring_interface/Aspt5/global.h \
+    measuring_interface/common_interfaces.h \
+    measuring_interface/measure.h \
+    measuring_interface/measuringinterface.h \
+    measuring_interface/Upn/myprotocol.h \
+    measuring_interface/Upn/upn.h \
+    table.h
+
+SOURCES += \
+    excel.cpp \
+    main.cpp \
+    mainwindow.cpp \
+    measuring_interface/Aspt5/adccfg.cpp \
+    measuring_interface/Aspt5/aspt.cpp \
+    measuring_interface/Aspt5/global.cpp \
+    measuring_interface/measure.cpp \
+    measuring_interface/measuringinterface.cpp \
+    measuring_interface/Upn/myprotocol.cpp \
+    measuring_interface/Upn/upn.cpp \
+    table.cpp
+
+
+
