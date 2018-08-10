@@ -92,20 +92,20 @@ void MainWindow::handleMessage(eMessageType msgType, int row)
     int count = (ui->sbxMeasNum->value() + ui->sbxSkipMeasNum->value()) * 6;
     switch (msgType) {
     case ConnectUptToAspt:
-        taskbarProgress->pause();
-        ui->table->scrollToItem(ui->table->item(row, 0));
-        if (QMessageBox::information(this, messageTitle, QString(tr("Воткни УПН №%1 в канал %2 АСПТ")).arg(ui->leUpnSerNum->text()).arg(row + 1), "Продолжить", "Остановить проверку", 0, 0) == 1) {
-            emit stopWork();
-        }
-        else {
-            ui->table->clearData(row);
-            progressBar.setMaximum(count);
-            progressBar.setValue(0);
-            taskbarProgress->resume();
-            elapsedTimer.start();
-        }
-        emit stopWork();
-        break;
+//        taskbarProgress->pause();
+//        ui->table->scrollToItem(ui->table->item(row, 0));
+//        if (QMessageBox::information(this, messageTitle, QString(tr("Воткни УПН №%1 в канал %2 АСПТ")).arg(ui->leUpnSerNum->text()).arg(row + 1), "Продолжить", "Остановить проверку", 0, 0) == 1) {
+//            emit stopWork();
+//        }
+//        else {
+//            ui->table->clearData(row);
+//            progressBar.setMaximum(count);
+//            progressBar.setValue(0);
+//            taskbarProgress->resume();
+//            elapsedTimer.start();
+//        }
+//        emit stopWork();
+//        break;
     case CheckFinished:
         taskbarProgress->stop();
         activateWindow();
@@ -527,15 +527,15 @@ void MainWindow::connectObjects()
     connect(MI::measure(), &Measure::doMessage, this, &MainWindow::handleMessage);
 
     /***************** table *****************/
-    connect(ui->table, &TABLE::updatePlot, ui->cbxPlot, &QComboBox::setCurrentIndex);
-    connect(ui->table, &TABLE::updatePlot, this, &MainWindow::updatePlot);
+    connect(ui->table, &Table::updatePlot, ui->cbxPlot, &QComboBox::setCurrentIndex);
+    connect(ui->table, &Table::updatePlot, this, &MainWindow::updatePlot);
     connect(ui->cbxPlot, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::updatePlot);
-    connect(ui->sbxSkipMeasNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->table, &TABLE::setSkip);
+    connect(ui->sbxSkipMeasNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->table, &Table::setSkip);
 
-    connect(ui->checkBox_setResetAll, &QCheckBox::toggled, ui->table, &TABLE::checkUncheckAll);
-    connect(ui->checkBox_ppm, &QCheckBox::toggled, ui->table, &TABLE::enablePpm);
-    connect(ui->checkBox_delta, &QCheckBox::toggled, ui->table, &TABLE::enableDelta);
-    connect(ui->pbClear, &QPushButton::clicked, ui->table, &TABLE::clearSelectedData);
+    connect(ui->checkBox_setResetAll, &QCheckBox::toggled, ui->table, &Table::checkUncheckAll);
+    connect(ui->checkBox_ppm, &QCheckBox::toggled, ui->table, &Table::enablePpm);
+    connect(ui->checkBox_delta, &QCheckBox::toggled, ui->table, &Table::enableDelta);
+    connect(ui->pbClear, &QPushButton::clicked, ui->table, &Table::clearSelectedData);
     connect(ui->leAsptSerNum, &QLineEdit::textChanged, [&](const QString& text) { messageTitle = text; });
 
     connect(ui->cbxAspt, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::currentIndexChanged);
@@ -585,43 +585,43 @@ void MainWindow::connectObjects()
     });
 
     connect(ui->pbStartStop, &QPushButton::clicked, [=](bool checked) {
-        if (checked) {
-            channels.clear();
-            for (int row = 0; row < 16; ++row) {
-                if (ui->table->item(row, 0)->checkState() == Qt::Checked)
-                    channels.append(qMakePair(int(row), int(3)));
-            }
-            if (channels.isEmpty()) {
-                QMessageBox::warning(this, messageTitle, tr("Не выбран ни один канал для измерения!"), tr("Хорошо"));
-                ui->pbStartStop->setChecked(false);
-                return;
-            }
-            ui->table->enableRow(false);
-            MI::aspt()->Ping(ui->cbxAspt->currentText());
-            MI::upn()->Ping(ui->cbxUpn->currentText());
-            ui->pbStartStop->setIcon(Stop);
-            ui->pbStartStop->setText(tr("Закончить проверку"));
-            ui->table->setCurrentFile(curFile);
-            setProgressVisible(true);
-            elapsedMs = 0;
-            emit goMeasure(channels, ui->sbxMeasNum->value() + ui->sbxSkipMeasNum->value());
-        }
-        else {
-            emit stopWork();
-            emit stopWork();
-            emit stopWork();
-            ui->table->enableRow(true);
-            ui->pbStartStop->setIcon(Start);
-            ui->pbStartStop->setText(tr("Начать проверку"));
-            progressBar.setValue(0);
-            setProgressVisible(false);
-        }
-        ui->pbStartStop->setChecked(checked);
-        ui->tab_1->setEnabled(!checked);
-        ui->tab_3->setEnabled(!checked);
-        ui->pbClear->setEnabled(!checked);
-        ui->checkBox_setResetAll->setEnabled(!checked);
-        menuBar()->setEnabled(!checked);
+//        if (checked) {
+//            channels.clear();
+//            for (int row = 0; row < 16; ++row) {
+//                if (ui->table->item(row, 0)->checkState() == Qt::Checked)
+//                    channels.append(qMakePair(int(row), int(3)));
+//            }
+//            if (channels.isEmpty()) {
+//                QMessageBox::warning(this, messageTitle, tr("Не выбран ни один канал для измерения!"), tr("Хорошо"));
+//                ui->pbStartStop->setChecked(false);
+//                return;
+//            }
+//            ui->table->enableRow(false);
+//            MI::aspt()->Ping(ui->cbxAspt->currentText());
+//            MI::upn()->Ping(ui->cbxUpn->currentText());
+//            ui->pbStartStop->setIcon(Stop);
+//            ui->pbStartStop->setText(tr("Закончить проверку"));
+//            ui->table->setCurrentFile(curFile);
+//            setProgressVisible(true);
+//            elapsedMs = 0;
+//            emit goMeasure(channels, ui->sbxMeasNum->value() + ui->sbxSkipMeasNum->value());
+//        }
+//        else {
+//            emit stopWork();
+//            emit stopWork();
+//            emit stopWork();
+//            ui->table->enableRow(true);
+//            ui->pbStartStop->setIcon(Start);
+//            ui->pbStartStop->setText(tr("Начать проверку"));
+//            progressBar.setValue(0);
+//            setProgressVisible(false);
+//        }
+//        ui->pbStartStop->setChecked(checked);
+//        ui->tab_1->setEnabled(!checked);
+//        ui->tab_3->setEnabled(!checked);
+//        ui->pbClear->setEnabled(!checked);
+//        ui->checkBox_setResetAll->setEnabled(!checked);
+//        menuBar()->setEnabled(!checked);
     });
 
     createActions();

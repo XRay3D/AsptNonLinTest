@@ -8,7 +8,7 @@
 #include <QObject>
 #include <QPaintEvent>
 #include <QScrollBar>
-#include <QTableWidget>
+#include <QTableView>
 #include <QTableWidgetItem>
 #include <QWidget>
 
@@ -16,11 +16,33 @@
 #include "excel.h"
 #endif
 
-class TABLE : public QTableWidget {
+class MyHeader : public QHeaderView {
     Q_OBJECT
 public:
-    explicit TABLE(QWidget* parent = 0);
-    ~TABLE();
+    MyHeader(Qt::Orientation orientation, QWidget* parent = 0);
+    ~MyHeader();
+    // QWidget interface
+protected:
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void paintSection(QPainter* painter, const QRect& rect, int logicalIndex) const override;
+
+signals:
+    void stateChanged(const QVector<bool>&, int);
+
+private:
+    QVector<bool> m_isOn;
+
+    // QWidget interface
+public:
+    QSize sizeHint() const override;
+};
+
+class Table : public QTableView {
+    Q_OBJECT
+public:
+    explicit Table(QWidget* parent = 0);
+    ~Table();
 
     void loadFile(const QString& fileName);
     void saveFile(const QString& fileName, const QString& asptNum, const QString& fio);
@@ -60,9 +82,9 @@ private:
     QString m_curFile;
 
     QVector<double> m_resistors;
-    QVector<QVector<double> > m_average;
-    QVector<QVector<QVector<double> > > m_data;
-    QVector<QVector<QVector<QString> > > m_cellText;
+    QVector<QVector<double>> m_average;
+    QVector<QVector<QVector<double>>> m_data;
+    QVector<QVector<QVector<QString>>> m_cellText;
 
 #ifdef EXCEL
     Excel::Application* excel;

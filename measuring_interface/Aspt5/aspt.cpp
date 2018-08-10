@@ -121,44 +121,44 @@ int Aspt::StepReadEEPROM(quint16 Address, QVector<quint8>& B, quint16& BS)
     return m_err;
 }
 
-int Aspt::ReadEEPROM(quint16 Address, QVector<quint8>& B, quint16& BS)
-{
-    int result = 0;
-    quint16 i = 0, j = 0;
-    quint16 Steps = 0;
-    quint16 LastStep = 0;
-    QVector<quint8> _B;
-    quint16 _BS = 0;
+//int Aspt::ReadEEPROM(quint16 Address, QVector<quint8>& B, quint16& BS)
+//{
+//    int result = 0;
+//    quint16 i = 0, j = 0;
+//    quint16 Steps = 0;
+//    quint16 LastStep = 0;
+//    QVector<quint8> _B;
+//    quint16 _BS = 0;
 
-    if (Address > 0x03E8 - BS)
-        return (m_err = ASPT_ERROR);
-    _BS = 0;
-    Steps = BS / MaxBuffSize;
-    LastStep = BS - Steps * MaxBuffSize;
-    BS = 0;
-    if (Steps > 0)
-        for (int stop = Steps, i = 0; i < stop; i++) {
-            Address = i * MaxBuffSize;
-            _BS = MaxBuffSize;
-            if (StepReadEEPROM(Address, _B, _BS) != ASPT_OK)
-                return m_err;
-            for (int stop = _BS - 1, j = 0; j <= stop; j++) {
-                B[i * MaxBuffSize + j] = _B[j];
-            }
-            BS = BS + _BS;
-        }
-    if (LastStep != 0) {
-        Address = Steps * MaxBuffSize;
-        _BS = LastStep;
-        if (StepReadEEPROM(Address, _B, _BS) != ASPT_OK)
-            return m_err;
-        for (int stop = _BS, j = 0; j < stop; j++) {
-            B[Steps * MaxBuffSize + j] = _B[j];
-        }
-        BS = BS + _BS;
-    }
-    return m_err;
-}
+//    if (Address > 0x03E8 - BS)
+//        return (m_err = ASPT_ERROR);
+//    _BS = 0;
+//    Steps = BS / MaxBuffSize;
+//    LastStep = BS - Steps * MaxBuffSize;
+//    BS = 0;
+//    if (Steps > 0)
+//        for (int stop = Steps, i = 0; i < stop; i++) {
+//            Address = i * MaxBuffSize;
+//            _BS = MaxBuffSize;
+//            if (StepReadEEPROM(Address, _B, _BS) != ASPT_OK)
+//                return m_err;
+//            for (int stop = _BS - 1, j = 0; j <= stop; j++) {
+//                B[i * MaxBuffSize + j] = _B[j];
+//            }
+//            BS = BS + _BS;
+//        }
+//    if (LastStep != 0) {
+//        Address = Steps * MaxBuffSize;
+//        _BS = LastStep;
+//        if (StepReadEEPROM(Address, _B, _BS) != ASPT_OK)
+//            return m_err;
+//        for (int stop = _BS, j = 0; j < stop; j++) {
+//            B[Steps * MaxBuffSize + j] = _B[j];
+//        }
+//        BS = BS + _BS;
+//    }
+//    return m_err;
+//}
 
 int Aspt::StepWriteEEPROM(quint16 Address, QVector<quint8> B, quint16 BS)
 {
@@ -201,38 +201,38 @@ int Aspt::StepWriteEEPROM(quint16 Address, QVector<quint8> B, quint16 BS)
     return m_err;
 }
 
-int Aspt::WriteEEPROM(quint16 Address, QVector<quint8> B, quint16 BS)
-{
-    quint16 i = 0, j = 0;
-    quint16 Steps = 0;
-    quint16 LastStep = 0;
-    QVector<quint8> _B;
-    quint16 _BS = 0;
-    if (Address > 0x03E8 - BS)
-        return (m_err = ASPT_ERROR);
-    for (int stop = MaxParcelLength, i = 0; i <= stop; i++)
-        _B[i] = 0; //_BS:=0;
-    Steps = BS / MaxBuffSize;
-    LastStep = BS - Steps * MaxBuffSize;
-    if (Steps > 0)
-        for (int stop = Steps - 1, i = 0; i <= stop; i++) {
-            for (int stop = MaxBuffSize - 1, j = 0; j <= stop; j++)
-                _B[j] = B[i * MaxBuffSize + j];
-            Address = i * MaxBuffSize;
-            _BS = MaxBuffSize;
-            if (StepWriteEEPROM(Address, _B, _BS) != ASPT_OK)
-                return m_err;
-        }
-    if (LastStep != 0) {
-        for (int stop = LastStep - 1, j = 0; j <= stop; j++)
-            _B[j] = B[Steps * MaxBuffSize + j];
-        Address = Steps * MaxBuffSize;
-        _BS = LastStep;
-        if (StepWriteEEPROM(Address, _B, _BS) != ASPT_OK)
-            return m_err;
-    }
-    return m_err;
-}
+//int Aspt::WriteEEPROM(quint16 Address, QVector<quint8> B, quint16 BS)
+//{
+//    //quint16 i = 0, j = 0;
+//    quint16 Steps = 0;
+//    quint16 LastStep = 0;
+//    QVector<quint8> _B;
+//    quint16 _BS = 0;
+//    if (Address > 0x03E8 - BS)
+//        return (m_err = ASPT_ERROR);
+//    for (int stop = MaxParcelLength, i = 0; i <= stop; i++)
+//        _B[i] = 0; //_BS:=0;
+//    Steps = BS / MaxBuffSize;
+//    LastStep = BS - Steps * MaxBuffSize;
+//    if (Steps > 0)
+//        for (int stop = Steps - 1, i = 0; i <= stop; i++) {
+//            for (int stop = MaxBuffSize - 1, j = 0; j <= stop; j++)
+//                _B[j] = B[i * MaxBuffSize + j];
+//            Address = i * MaxBuffSize;
+//            _BS = MaxBuffSize;
+//            if (StepWriteEEPROM(Address, _B, _BS) != ASPT_OK)
+//                return m_err;
+//        }
+//    if (LastStep != 0) {
+//        for (int stop = LastStep - 1, j = 0; j <= stop; j++)
+//            _B[j] = B[Steps * MaxBuffSize + j];
+//        Address = Steps * MaxBuffSize;
+//        _BS = LastStep;
+//        if (StepWriteEEPROM(Address, _B, _BS) != ASPT_OK)
+//            return m_err;
+//    }
+//    return m_err;
+//}
 
 template <typename T>
 int Aspt::ReadParameter(DeviceParameter_e DevParam, Parameter_t<T>& P)

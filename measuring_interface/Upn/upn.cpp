@@ -96,7 +96,7 @@ bool Upn::setResistor(int r)
         if (!IsConnected())
             break;
         emit Write(Parcel<quint8>(SET_RESISTOR, m_relay[r]));
-        if (m_semaphore.tryAcquire(1, 100))
+        if (m_semaphore.tryAcquire(1, 10000))
             m_result = true;
     } while (0);
     return m_result;
@@ -112,11 +112,11 @@ bool Upn::writeResistorValue(const QVector<double>& r)
         for (quint8 i = 0; i < 6; ++i) {
             WriteResistor_t t = { i, r[i] };
             emit Write(Parcel<WriteResistor_t>(WRITE_RESISTOR_VALUE, t));
-            if (!m_semaphore.tryAcquire(1, 100))
+            if (!m_semaphore.tryAcquire(1, 1000))
                 return m_result;
         }
         emit Write(Parcel<quint8>(WRITE_RESISTOR_VALUE, 6));
-        if (!m_semaphore.tryAcquire(1, 100))
+        if (!m_semaphore.tryAcquire(1, 1000))
             break;
         m_resistors = r;
         m_result = true;

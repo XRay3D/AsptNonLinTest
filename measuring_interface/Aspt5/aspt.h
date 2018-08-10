@@ -7,18 +7,18 @@
 
 //#include "ex_com.h"
 //#include "ExCOM_ASPT/com_u.h"
-#include "global.h"
 #include "adccfg.h"
+#include "global.h"
 //#include "nsh_u.h"
 
+#include "../common_interfaces.h"
+#include <QDate>
+#include <QElapsedTimer>
 #include <QMutex>
+#include <QSemaphore>
 #include <QSerialPort>
 #include <QSet>
-#include <QElapsedTimer>
-#include <QSemaphore>
 #include <QThread>
-#include <QDate>
-#include "../common_interfaces.h"
 
 #pragma pack(push, 1)
 // в блоке данных (чтение/запись параметров)
@@ -84,13 +84,13 @@ public: // создание экземпляра объекта
     // изменение сетевого адреса прибора
     int ChangeNumber(quint8 NewDevNum);
     // шаг чтения EEPROM
-    int StepReadEEPROM(quint16 Address, QVector<quint8>& B, quint16 &BS);
+    int StepReadEEPROM(quint16 Address, QVector<quint8>& B, quint16& BS);
     // чтение EEPROM
-    int ReadEEPROM(quint16 Address, QVector<quint8>& B, quint16& BS);
+    //    int ReadEEPROM(quint16 Address, QVector<quint8>& B, quint16& BS);
     // шаг записи EEPROM
     int StepWriteEEPROM(quint16 Address, QVector<quint8> B, quint16 BS);
     // запись в EEPROM
-    int WriteEEPROM(quint16 Address, QVector<quint8> B, quint16 BS);
+    //    int WriteEEPROM(quint16 Address, QVector<quint8> B, quint16 BS);
     // чтение параметра прибора
     template <typename T>
     int ReadParameter(DeviceParameter_e DevParam, Parameter_t<T>& P);

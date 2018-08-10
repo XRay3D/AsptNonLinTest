@@ -39,7 +39,8 @@ HEADERS += \
     measuring_interface/measuringinterface.h \
     measuring_interface/Upn/myprotocol.h \
     measuring_interface/Upn/upn.h \
-    table.h
+    table.h \
+    mytablemodel.h
 
 SOURCES += \
     excel.cpp \
@@ -52,7 +53,8 @@ SOURCES += \
     measuring_interface/measuringinterface.cpp \
     measuring_interface/Upn/myprotocol.cpp \
     measuring_interface/Upn/upn.cpp \
-    table.cpp
+    table.cpp \
+    mytablemodel.cpp
 
 
 
