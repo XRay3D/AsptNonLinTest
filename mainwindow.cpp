@@ -567,7 +567,7 @@ void MainWindow::connectObjects()
         ui->tab_1->setEnabled(!checked);
         ui->tab_3->setEnabled(!checked);
         ui->pbClear->setEnabled(!checked);
-        ui->table->verticalHeader()->setEnabled(!checked);
+        ui->table->setEnabledCheckBoxes(!checked);
         menuBar()->setEnabled(!checked);
     });
 

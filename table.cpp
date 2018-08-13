@@ -20,7 +20,7 @@ Table::Table(QWidget* parent)
 
     QAbstractButton* cornerButton = findChild<QAbstractButton*>();
     if (cornerButton) {
-        QCheckBox* c = new QCheckBox("№", cornerButton);
+        c = new QCheckBox("№", cornerButton);
         c->setGeometry(cornerButton->rect() + QMargins(-5, 0, 100, 0));
         connect(c, &QCheckBox::toggled, [this](bool checked) { reinterpret_cast<MyHeader*>(verticalHeader())->setChecked(checked); });
     }
@@ -41,12 +41,8 @@ Table::Table(QWidget* parent)
 
     setIconSize(QSize(24, 24));
 
-    horizontalHeader()->setSectionResizeMode(SignalCh0, QHeaderView::ResizeToContents);
-    horizontalHeader()->setSectionResizeMode(MeasureDeltaCh0, QHeaderView::ResizeToContents);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     horizontalHeader()->setSectionResizeMode(MeasureCh0, QHeaderView::Stretch);
-
-    horizontalHeader()->setSectionResizeMode(SignalCh1, QHeaderView::ResizeToContents);
-    horizontalHeader()->setSectionResizeMode(MeasureDeltaCh1, QHeaderView::ResizeToContents);
     horizontalHeader()->setSectionResizeMode(MeasureCh1, QHeaderView::Stretch);
 
     //        Interactive,
@@ -265,4 +261,11 @@ QVector<bool> Table::checkedRows() const
 void Table::setCurrentFile(const QString& value)
 {
     m_curFile = value;
+}
+
+void Table::setEnabledCheckBoxes(bool enabled)
+{
+    verticalHeader()->setEnabled(enabled);
+    if (c)
+        c->setEnabled(enabled);
 }

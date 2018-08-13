@@ -17,6 +17,7 @@
 #endif
 
 class MyTableModel;
+class QCheckBox;
 
 class Table : public QTableView {
     Q_OBJECT
@@ -33,6 +34,7 @@ public:
     void printFile(const QString& fileName);
     void saveFile(const QString& fileName, const QString& asptNum, const QString& fio);
     void setCurrentFile(const QString& value);
+    void setEnabledCheckBoxes(bool enabled);
 
 signals:
     void updatePlot(int chNum);
@@ -41,6 +43,7 @@ private:
     MyTableModel* m_model;
 
     QString m_curFile;
+    QCheckBox* c = nullptr;
 
 #ifdef EXCEL
     Excel::Application* excel;
