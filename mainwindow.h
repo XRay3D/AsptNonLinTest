@@ -14,7 +14,7 @@
 #include <QLineSeries>
 
 #include "table.h"
-#include "measuring_interface/measuringinterface.h"
+#include "measuring_interface/mi.h"
 
 QT_CHARTS_USE_NAMESPACE
 

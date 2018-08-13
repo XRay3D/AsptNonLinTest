@@ -1,12 +1,17 @@
 #include "mainwindow.h"
+#include "measuring_interface/mi.h"
 #include <QApplication>
-#include "measuring_interface/measuringinterface.h"
 
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
     a.setOrganizationName("XrSoft");
     a.setApplicationName("AsptNonLinTest");
+
+    QFont font;
+    font.setPointSize(12);
+    a.setFont(font);
+
     QIcon::setThemeSearchPaths({ QCoreApplication::applicationDirPath() + "/icons/breeze/", QCoreApplication::applicationDirPath() + "/icons/breeze-dark/" });
     QIcon::setThemeName("breeze");
 

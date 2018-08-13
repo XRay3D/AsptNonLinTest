@@ -1,21 +1,21 @@
 #include "measure.h"
-#include "measuringinterface.h"
+#include "mi.h"
 #include <QCoreApplication>
 #include <QSerialPortInfo>
 
 static int id1 = qRegisterMetaType<eDevice>("eDevice");
 static int id2 = qRegisterMetaType<eMessageType>("eMessageType");
-static int id3 = qRegisterMetaType<QVector<QPair<int, int> > >("QVector<QPair<int, int>>");
-static int id4 = qRegisterMetaType<QVector<double> >("QVector<double>");
+static int id3 = qRegisterMetaType<QVector<QPair<int, int>>>("QVector<QPair<int, int>>");
+static int id4 = qRegisterMetaType<QVector<double>>("QVector<double>");
 
 Measure::Measure(QObject* parent)
-    : QSerialPort(parent)
-    , m_AdcCfgList({ "|1|1|1|0|0|0|3|6|28|3|0|0|5|0|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|220|0|\0",
-          "|1|1|1|0|0|0|3|6|28|3|0|0|5|1|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|221|0|\0" })
+    : QObject(parent)
+    , m_AdcCfgList{
+        "|1|1|1|0|0|0|3|6|28|3|0|0|5|0|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|220|0|\0",
+        "|1|1|1|0|0|0|3|6|28|3|0|0|5|1|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|221|0|\0"
+    }
     , m_beep("beep.wav", this)
 {
-    setBaudRate(9600);
-    setParity(NoParity);
 }
 
 void Measure::searchDevices()
@@ -25,18 +25,18 @@ void Measure::searchDevices()
     for (QSerialPortInfo& portInfo : ports) {
         if (checkStop())
             break;
-        if (MI::aspt()->Ping(portInfo.portName())) {
+        if (MI::aspt->Ping(portInfo.portName())) {
             m_beep.play();
-            emit deviceFound(DeviceAspt, portInfo.portName(), MI::aspt()->SerialNumber());
+            emit deviceFound(DeviceAspt, portInfo.portName(), MI::aspt->SerialNumber());
         }
         emit deviceFound(DeviceProgres);
 
         if (checkStop())
             break;
-        if (MI::upn()->Ping(portInfo.portName())) {
-            if (MI::upn()->readResistorValue()) {
+        if (MI::upn->Ping(portInfo.portName())) {
+            if (MI::upn->readResistorValue()) {
                 m_beep.play();
-                emit deviceFound(DeviceUpt, portInfo.portName(), MI::upn()->resistors().last());
+                emit deviceFound(DeviceUpt, portInfo.portName(), MI::upn->resistors().last());
             }
         }
         emit deviceFound(DeviceProgres);
@@ -44,26 +44,24 @@ void Measure::searchDevices()
     emit deviceFound(DeviceStopSearch);
 }
 
-void Measure::measure(const QVector<QPair<int, int> >& channels, int points)
+void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
 {
     resetSemaphore();
 
-    if (MI::aspt()->Initialize() != ASPT_OK) {
+    if (MI::aspt->Initialize() != ASPT_OK) {
         emit doMessage(CheckAsptConnection, 0);
         return;
     }
 
     for (QPair<int, int> stage : channels) {
         m_beep.play();
-        emit doMessage(ConnectUptToAspt, stage.first);
-        while (!checkStop())
-            continue;
-        if (checkStop()) {
+
+        if (connectUpt(ConnectUptToAspt, stage.first) == 2) {
             emit doMessage(TerminateCheck, 0);
             return;
         }
 
-        if (MI::aspt()->Correction() != ASPT_OK) {
+        if (MI::aspt->Correction() != ASPT_OK) {
             emit doMessage(CheckAsptConnection, 0);
             return;
         }
@@ -75,7 +73,7 @@ void Measure::measure(const QVector<QPair<int, int> >& channels, int points)
         double v = 0.0;
 
         for (res = 0; res < 6; ++res) {
-            if (!MI::upn()->setResistor(res)) {
+            if (!MI::upn->setResistor(res)) {
                 emit doMessage(CheckUptConnection, 0);
                 return;
             }
@@ -85,14 +83,13 @@ void Measure::measure(const QVector<QPair<int, int> >& channels, int points)
                     res = 2;
                     continue;
                 }
-                ADCCfg.SetPack(m_AdcCfgList.at(0));
-            }
-            else {
+                ADCCfg.SetPack(m_AdcCfgList[0]);
+            } else {
                 if (!(stage.second & 0x2)) {
                     res = 6;
                     continue;
                 }
-                ADCCfg.SetPack(m_AdcCfgList.at(1));
+                ADCCfg.SetPack(m_AdcCfgList[1]);
             }
 
             QVector<quint8> arr;
@@ -104,43 +101,41 @@ void Measure::measure(const QVector<QPair<int, int> >& channels, int points)
             ADCCfg.SetValuePolarityCurrent(arr);
 
             thread()->msleep(100);
-            bool fl = false;
+            //            bool fl = false;
             for (int i = 0; i < points; ++i) {
-                do {
-                    if (checkStop())
-                        return;
-                    if (MI::aspt()->GetMeasureValue(ADCCfg, vtR4W, 1.0, v) != 0) {
-                        emit doMessage(CheckAsptConnection, 0);
-                        return;
-                    }
-                    if (checkStop())
-                        return;
-                    qDebug() << v;
-                    switch (res) {
-                    case 2:
-                    case 5:
-                        if (290 > v || 310 < v) {
-                            fl = true;
-                            emit doMessage(CheckUptToAsptConnection, stage.first);
-                            while (!checkStop())
-                                continue;
-                        }
-                        else
-                            fl = false;
-                        break;
-                    default:
-                        if (140 > v || 160 < v) {
-                            fl = true;
-                            emit doMessage(CheckUptToAsptConnection, stage.first);
-                            while (!checkStop())
-                                continue;
-                        }
-                        else
-                            fl = false;
-                        break;
-                    }
-                    thread()->msleep(200);
-                } while (fl);
+                //                do {
+                //                    if (checkStop())
+                //                        return;
+                if (MI::aspt->GetMeasureValue(ADCCfg, vtR4W, 1.0, v) != 0) {
+                    emit doMessage(CheckAsptConnection, 0);
+                    return;
+                }
+                if (checkStop())
+                    return;
+                //                    qDebug() << v;
+                //                    switch (res) {
+                //                    case 2:
+                //                    case 5:
+                //                        if (290 > v || 310 < v) {
+                //                            fl = true;
+                //                            emit doMessage(CheckUptToAsptConnection, stage.first);
+                //                            while (!checkStop())
+                //                                continue;
+                //                        } else
+                //                            fl = false;
+                //                        break;
+                //                    default:
+                //                        if (140 > v || 160 < v) {
+                //                            fl = true;
+                //                            emit doMessage(CheckUptToAsptConnection, stage.first);
+                //                            while (!checkStop())
+                //                                continue;
+                //                        } else
+                //                            fl = false;
+                //                        break;
+                //                    }
+                //                    thread()->msleep(200);
+                //                } while (fl);
                 emit measureReady(v, stage.first, res, i);
             }
         }
@@ -156,7 +151,6 @@ void Measure::stopWork()
 
 bool Measure::checkStop()
 {
-    //thread()->msleep(100);
     QCoreApplication::processEvents(QEventLoop::AllEvents); //call void AsptUpt::stopWork()
     return m_semaphore.tryAcquire();
 }
@@ -167,12 +161,21 @@ void Measure::resetSemaphore()
         m_semaphore.acquire(m_semaphore.available());
 }
 
-QStringList Measure::getAdcCfg() const
+int Measure::connectUpt(eMessageType msgType, int row)
 {
-    return m_AdcCfgList;
+    emit doMessage(msgType, row);
+    int fl = 0;
+    while (!fl) {
+        thread()->msleep(100);
+        QCoreApplication::processEvents(QEventLoop::AllEvents); //call void AsptUpt::stopWork()
+        fl = m_semaphore.available();
+    }
+    m_semaphore.acquire(m_semaphore.available());
+    return fl;
 }
 
 void Measure::setAdcCfg(const QStringList& value)
 {
-    m_AdcCfgList = value;
+    m_AdcCfgList[0] = value.value(0);
+    m_AdcCfgList[1] = value.value(1);
 }

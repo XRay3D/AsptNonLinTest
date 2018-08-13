@@ -2,9 +2,7 @@
 #define MEASURE_H
 
 #include <QSemaphore>
-#include <QSerialPort>
 #include <QSound>
-#include <QVector>
 
 enum eDevice {
     DeviceAspt,
@@ -22,17 +20,17 @@ enum eMessageType {
     CheckUptToAsptConnection,
 };
 
-class Measure : public QSerialPort /*, public Device, public Upn*/ {
+class Measure : public QObject {
     Q_OBJECT
+
 public:
     explicit Measure(QObject* parent = 0);
 
-    void measure(const QVector<QPair<int, int> >& channels, int points);
+    void measure(const QVector<QPair<int, int>>& channels, int points);
     void searchDevices();
     void stopWork();
 
     void setAdcCfg(const QStringList& value);
-    QStringList getAdcCfg() const;
 
 signals:
     void deviceFound(eDevice device, const QString& portName = "", double num = 0.0);
@@ -42,8 +40,9 @@ signals:
 private:
     bool checkStop();
     void resetSemaphore();
+    int connectUpt(eMessageType msgType, int row);
 
-    QStringList m_AdcCfgList;
+    QString m_AdcCfgList[2];
     QSound m_beep;
     QSemaphore m_semaphore;
 };

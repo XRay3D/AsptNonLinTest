@@ -34,13 +34,16 @@ HEADERS += \
     measuring_interface/Aspt5/adccfg.h \
     measuring_interface/Aspt5/aspt.h \
     measuring_interface/Aspt5/global.h \
-    measuring_interface/common_interfaces.h \
-    measuring_interface/measure.h \
-    measuring_interface/measuringinterface.h \
     measuring_interface/Upn/myprotocol.h \
     measuring_interface/Upn/upn.h \
+    measuring_interface/common_interfaces.h \
+    measuring_interface/measure.h \
+    measuring_interface/mi.h \
+    myheader.h \
+    mytablemodel.h \
+    rowdata.h \
     table.h \
-    mytablemodel.h
+    tableparams.h
 
 SOURCES += \
     excel.cpp \
@@ -49,12 +52,14 @@ SOURCES += \
     measuring_interface/Aspt5/adccfg.cpp \
     measuring_interface/Aspt5/aspt.cpp \
     measuring_interface/Aspt5/global.cpp \
-    measuring_interface/measure.cpp \
-    measuring_interface/measuringinterface.cpp \
     measuring_interface/Upn/myprotocol.cpp \
     measuring_interface/Upn/upn.cpp \
+    measuring_interface/measure.cpp \
+    measuring_interface/mi.cpp \
+    myheader.cpp \
+    mytablemodel.cpp \
+    rowdata.cpp \
     table.cpp \
-    mytablemodel.cpp
 
 
 

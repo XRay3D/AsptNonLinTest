@@ -1,18 +1,18 @@
 #ifndef MEASURINGINTERFACE_H
 #define MEASURINGINTERFACE_H
 
-#include <QObject>
+#include "Aspt5/aspt.h"
 #include "Upn/upn.h"
 #include "measure.h"
-#include "Aspt5/aspt.h"
+#include <QObject>
 
 class MI {
 public:
     MI();
     ~MI();
-    static Upn* upn();
-    static Measure* measure();
-    static Aspt* aspt();
+    static Aspt* aspt;
+    static Measure* measure;
+    static Upn* upn;
 };
 
 #endif // MEASURINGINTERFACE_H
