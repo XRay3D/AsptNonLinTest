@@ -3,8 +3,8 @@
 
 //#include "ExCOM_ASPT/com_u.h"
 #include <QObject>
-#include <QVector>
 #include <QSet>
+#include <QVector>
 
 enum {
     MaxParcelLength = 512,
@@ -246,7 +246,7 @@ protected:
     // принимаемый заголовок посылки
     Caption_t m_captionReceive;
     // код ошибки
-    int m_err = 0;
+    mutable int m_err = 0;
 
     int CheckControlAmount(QVector<quint8> B);
     int ControlAmount(QVector<quint8>& B);

@@ -45,9 +45,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
-    emit stopWork();
-    emit stopWork();
-    emit stopWork();
+    emit stopWork(3);
     delete ui;
 }
 
@@ -473,19 +471,19 @@ void MainWindow::connectObjects()
     /***************** Thread *****************/
     connect(this, &MainWindow::goMeasure, MI::measure, &Measure::measure);
     connect(this, &MainWindow::goFindDevices, MI::measure, &Measure::searchDevices);
-    connect(this, &MainWindow::stopWork, /*&Thread, &QThread::requestInterruption); //*/ MI::measure, &Measure::stopWork);
-    //    connect(this, &MainWindow::setResistor, MI::upn, &Measure::setResistor);
+    connect(this, &MainWindow::stopWork, MI::measure, &Measure::stopWork);
+
     connect(MI::measure, &Measure::deviceFound, this, &MainWindow::handleDeviceFound);
     connect(MI::measure, &Measure::measureReady, this, &MainWindow::handleMeasure);
     connect(MI::measure, &Measure::doMessage, this, &MainWindow::handleMessage);
 
     /***************** table->model() *****************/
-    connect(ui->table, &Table::updatePlot, ui->cbxPlot, &QComboBox::setCurrentIndex);
-    connect(ui->table, &Table::updatePlot, this, &MainWindow::updatePlot);
+    connect(ui->table, &MyTable::updatePlot, ui->cbxPlot, &QComboBox::setCurrentIndex);
+    connect(ui->table, &MyTable::updatePlot, this, &MainWindow::updatePlot);
     connect(ui->cbxPlot, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::updatePlot);
     connect(ui->sbxSkipMeasNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->table->model(), &MyTableModel::setSkip);
 
-    connect(ui->chbxDelta, &QCheckBox::toggled, ui->table, &Table::enableDelta);
+    connect(ui->chbxDelta, &QCheckBox::toggled, ui->table, &MyTable::enableDelta);
     connect(ui->pbClear, &QPushButton::clicked, ui->table->model(), &MyTableModel::clearSelectedData);
     connect(ui->leAsptSerNum, &QLineEdit::textChanged, [&](const QString& text) { messageTitle = text; });
 
@@ -515,12 +513,13 @@ void MainWindow::connectObjects()
 
     ui->tab_3->setEnabled(false);
 
-    connect(ui->pbUpnR1Ch0, &QPushButton::clicked, [] { MI::upn->setResistor(0); });
-    connect(ui->pbUpnR2Ch0, &QPushButton::clicked, [] { MI::upn->setResistor(1); });
-    connect(ui->pbUpnR3Ch0, &QPushButton::clicked, [] { MI::upn->setResistor(2); });
-    connect(ui->pbUpnR1Ch1, &QPushButton::clicked, [] { MI::upn->setResistor(3); });
-    connect(ui->pbUpnR2Ch1, &QPushButton::clicked, [] { MI::upn->setResistor(4); });
-    connect(ui->pbUpnR3Ch1, &QPushButton::clicked, [] { MI::upn->setResistor(5); });
+    connect(this, &MainWindow::setResistor, MI::upn, &Upn::setResistor);
+    connect(ui->pbUpnR1Ch0, &QPushButton::clicked, [this] { setResistor(0); });
+    connect(ui->pbUpnR2Ch0, &QPushButton::clicked, [this] { setResistor(1); });
+    connect(ui->pbUpnR3Ch0, &QPushButton::clicked, [this] { setResistor(2); });
+    connect(ui->pbUpnR1Ch1, &QPushButton::clicked, [this] { setResistor(3); });
+    connect(ui->pbUpnR2Ch1, &QPushButton::clicked, [this] { setResistor(4); });
+    connect(ui->pbUpnR3Ch1, &QPushButton::clicked, [this] { setResistor(5); });
 
     connect(ui->dsbxMin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [&](double arg1) {
         if (ui->dsbxMax->value() < arg1)
@@ -555,9 +554,7 @@ void MainWindow::connectObjects()
             elapsedMs = 0;
             emit goMeasure(channels, ui->sbxMeasNum->value() + ui->sbxSkipMeasNum->value());
         } else {
-            emit stopWork();
-            emit stopWork();
-            emit stopWork();
+            emit stopWork(3);
             ui->pbStartStop->setIcon(Start);
             ui->pbStartStop->setText(tr("Начать проверку"));
             progressBar.setValue(0);

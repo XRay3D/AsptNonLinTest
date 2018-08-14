@@ -307,7 +307,7 @@ int Aspt::Measure(AdcCfg& ADCCfg, double* M)
         Q_UNUSED(control)
         if (m_err != ASPT_OK)
             break;
-        if ((m_err = ADCCfg.ConvertSectionToParcel(B2)) != ASPT_OK)
+        if ((m_err = ADCCfg.convertSectionToParcel(B2)) != ASPT_OK)
             break;
         if (ConvertSectionToParcel(bnCaptionTransmit, B1, ProcessSteps, 0, B2.size() - 2, 0) != ASPT_OK)
             break;
@@ -334,7 +334,7 @@ int Aspt::Measure(AdcCfg& ADCCfg, double* M)
         }
         if (ReceiveBlock(B1, m_captionReceive.TransmitMasLength + 2, 2000) != ASPT_OK)
             break;
-        if (B1[0] != ADCCfg.GetMeasureStepCount()) {
+        if (B1[0] != ADCCfg.measureStepCount()) {
             m_err = ASPT_ERROR;
             break;
         }

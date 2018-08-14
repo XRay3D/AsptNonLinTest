@@ -5,7 +5,7 @@
 
 class MyHeader : public QHeaderView {
     Q_OBJECT
-    friend class Table;
+    friend class MyTable;
 
 public:
     MyHeader(Qt::Orientation orientation, QWidget* parent = nullptr);

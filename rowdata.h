@@ -29,17 +29,20 @@ private:
     double m_average[6];
     QString m_dataText[6];
     QString m_deltaText[6];
+
     enum {
         R1_CH0,
         R2_CH0,
         R3_CH0,
         R1_CH1,
         R2_CH1,
-        R3_CH1,
-        CH0 = 0,
+        R3_CH1
+    };
+
+    enum {
+        CH0,
         CH1
     };
-    //    static double m_resistors[6];
 };
 
 #endif // ROWDATA_H

@@ -28,9 +28,7 @@ public:
 
     void measure(const QVector<QPair<int, int>>& channels, int points);
     void searchDevices();
-    void stopWork();
-
-    void setAdcCfg(const QStringList& value);
+    void stopWork(int count);
 
 signals:
     void deviceFound(eDevice device, const QString& portName = "", double num = 0.0);
@@ -42,7 +40,7 @@ private:
     void resetSemaphore();
     int connectUpt(eMessageType msgType, int row);
 
-    QString m_AdcCfgList[2];
+    const QString m_AdcCfgList[2];
     QSound m_beep;
     QSemaphore m_semaphore;
 };

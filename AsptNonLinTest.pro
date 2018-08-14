@@ -42,8 +42,8 @@ HEADERS += \
     myheader.h \
     mytablemodel.h \
     rowdata.h \
-    table.h \
-    tableparams.h
+    tableparams.h \
+    mytable.h
 
 SOURCES += \
     excel.cpp \
@@ -59,7 +59,7 @@ SOURCES += \
     myheader.cpp \
     mytablemodel.cpp \
     rowdata.cpp \
-    table.cpp \
+    mytable.cpp
 
 
 

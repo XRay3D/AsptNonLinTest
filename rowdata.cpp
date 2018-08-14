@@ -2,7 +2,6 @@
 
 double RowData::m_max = 0.0001;
 double RowData::m_min = 0.001;
-//int Row::m_resistors = { 0.0 };
 int RowData::m_skip = 10;
 
 RowData::RowData()
@@ -70,42 +69,35 @@ void RowData::addData(const int pos, double val)
         }
     }
     ///////////////////////
-    int i = (pos % 3);
+    const int i = (pos % 3);
     m_dataText[pos] = QString("R%1 = %2%3").arg(i + 1).arg(m_average[pos], 0, 'f', 5).arg(i < 2 ? '\n' : ' ').replace('.', ',');
-
     m_deltaText[pos] = QString("%1%2").arg((max - min) * 1000.0, 0, 'g', 3).arg(i < 2 ? '\n' : ' ').replace('.', ',');
+
+    auto decor = [&](int ch = CH0) {
+        delta = abs(delta);
+        if (delta > m_max || delta == 0.0) {
+            color[ch] = QColor::fromHsv(0, 50, 255);
+            icon[ch] = QIcon("icon1.svg");
+        } else if (delta < m_min) {
+            color[ch] = QColor::fromHsv(120, 50, 255);
+            icon[ch] = QIcon("icon2.svg");
+        } else {
+            color[ch] = QColor::fromHsv(120 - static_cast<int>((120 / (m_max - m_min)) * (delta - m_min)), 50, 255);
+            icon[ch] = QIcon("icon3.svg");
+        }
+    };
 
     if (pos < 3) {
         delta = m_average[R1_CH0] + m_average[R2_CH0] - m_average[R3_CH0];
         m_cellText[MeasureCh0] = QString("%1%2").arg(delta < 0 ? "" : "").arg(delta, 0, 'f', 6).replace('.', ',');
-        delta = abs(delta);
-        if (delta > m_max || delta == 0.0) {
-            color[CH0] = QColor::fromHsv(0, 50, 255);
-            icon[CH0] = QIcon("icon1.svg");
-        } else if (delta < m_min) {
-            color[CH0] = QColor::fromHsv(120, 50, 255);
-            icon[CH0] = QIcon("icon2.svg");
-        } else {
-            color[CH0] = QColor::fromHsv(120 - static_cast<int>((120 / (m_max - m_min)) * (delta - m_min)), 50, 255);
-            icon[CH0] = QIcon("icon3.svg");
-        }
         m_cellText[SignalCh0] = m_dataText[R1_CH0] + m_dataText[R2_CH0] + m_dataText[R3_CH0];
         m_cellText[MeasureDeltaCh0] = m_deltaText[R1_CH0] + m_deltaText[R2_CH0] + m_deltaText[R3_CH0];
+        decor(CH0);
     } else {
         delta = m_average[R1_CH1] + m_average[R2_CH1] - m_average[R3_CH1];
         m_cellText[MeasureCh1] = QString("%1%2").arg(delta < 0 ? "" : "").arg(delta, 0, 'f', 6).replace('.', ',');
-        delta = abs(delta);
-        if (delta > m_max || delta == 0.0) {
-            color[CH1] = QColor::fromHsv(0, 50, 255);
-            icon[CH1] = QIcon("icon1.svg");
-        } else if (delta < m_min) {
-            color[CH1] = QColor::fromHsv(120, 50, 255);
-            icon[CH1] = QIcon("icon2.svg");
-        } else {
-            color[CH1] = QColor::fromHsv(120 - static_cast<int>((120 / (m_max - m_min)) * (delta - m_min)), 50, 255);
-            icon[CH1] = QIcon("icon3.svg");
-        }
         m_cellText[SignalCh1] = m_dataText[R1_CH1] + m_dataText[R2_CH1] + m_dataText[R3_CH1];
         m_cellText[MeasureDeltaCh1] = m_deltaText[R1_CH1] + m_deltaText[R2_CH1] + m_deltaText[R3_CH1];
+        decor(CH1);
     }
 }

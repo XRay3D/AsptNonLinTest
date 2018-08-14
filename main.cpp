@@ -5,12 +5,12 @@
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
-    a.setOrganizationName("XrSoft");
-    a.setApplicationName("AsptNonLinTest");
+    QApplication::setOrganizationName("XrSoft");
+    QApplication::setApplicationName("AsptNonLinTest");
 
     QFont font;
     font.setPointSize(12);
-    a.setFont(font);
+    QApplication::setFont(font);
 
     QIcon::setThemeSearchPaths({ QCoreApplication::applicationDirPath() + "/icons/breeze/", QCoreApplication::applicationDirPath() + "/icons/breeze-dark/" });
     QIcon::setThemeName("breeze");

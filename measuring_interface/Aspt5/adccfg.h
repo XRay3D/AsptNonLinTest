@@ -15,10 +15,6 @@ enum {
 };
 class AdcCfg : private AsptProtocol {
 
-private:
-    int m_err;
-    quint8 _MeasureStepCount;
-
 public:
     static const QString PackClearADCCfgFull;
     static const QString PackClearADCCfgLow;
@@ -30,7 +26,7 @@ public:
     static const QString PackVoltage;
 
 #pragma pack(push, 1)
-    typedef struct TbData {
+    typedef struct StepData {
         quint8 UnsetADC; /*бит*/ // 1 - требуется сброс АЦП
         quint8 AutoCalibrationADC; /*бит*/ // 1 - требуется самокалибровка АЦП
         quint8 UnsetFilter; /*бит*/ // 1 - нужен сброс фильтра (SYNC)
@@ -46,60 +42,91 @@ public:
         quint8 AmountMeasurements; // количество пропущенных измерений перед первым
         quint8 AmountAverage; // количество усреднений
         //quint8 F;
-    } TbData;
+    } StepData;
 
     // настройки АЦП прибора для измерения напряжений канала по шагам
-    TbData MeasureStep[6 /*# range 0..MaxStepCount-1*/];
+    StepData MeasureStep[6];
 #pragma pack(pop)
     // используемые для измерения шаги
-    bool UseMeasureStep[6 /*# range 0..MaxStepCount-1*/];
+    bool UseMeasureStep[6];
     // размер передаваемых данных посылки
-    quint16 bDataSize;
     // __property unsignedchar MeasureStepCount = { read = GetMeasureStepCount, write = SetMeasureStepCount };
-    //quint8 MeasureStepCount;
 
     AdcCfg(const QString& Pack = QString());
     ~AdcCfg();
 
-    quint8 GetMeasureStepCount();
-    void SetMeasureStepCount(quint8 SC);
+    quint8 measureStepCount();
+    void setMeasureStepCount(quint8 SC);
 
-    int ClearSection();
-    int InitSection();
-    int ConvertSectionToParcel(QVector<quint8>& B);
-    int ConvertSectionFromParcel(QVector<quint8>& B);
-    int SetUseMeasureStep(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetUseMeasureStep(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetUnsetADC(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetUnsetADC(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetAutoCalibrationADC(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetAutoCalibrationADC(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetUnsetFilter(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetUnsetFilter(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetInputBuffer(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetInputBuffer(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetStateCurrent(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetStateCurrent(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetGainFactor(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetGainFactor(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetFilterFrequency(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetFilterFrequency(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetMeasureChannel(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetMeasureChannel(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetSupportingResistor(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetSupportingResistor(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetValuePolarityCurrent(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetValuePolarityCurrent(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetVoltageChannel(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetVoltageChannel(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetPauseBeforeMeasure(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetPauseBeforeMeasure(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetAmountMeasurements(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetAmountMeasurements(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetAmountAverage(const QVector<quint8>& P /*, int P_maxidx*/);
-    int GetAmountAverage(QVector<quint8>& P /*, int P_maxidx*/);
-    int SetPack(const QString& P);
-    QString GetPack();
+    int clear();
+    int init();
+
+    int convertSectionToParcel(QVector<quint8>& B);
+    int convertSectionFromParcel(QVector<quint8>& B);
+
+    int setUseMeasureStep(const QVector<quint8>& P);
+    int useMeasureStep(QVector<quint8>& P) const;
+    QVector<quint8> useMeasureStep() const;
+
+    int setUnsetADC(const QVector<quint8>& P);
+    int unsetADC(QVector<quint8>& P) const;
+    QVector<quint8> unsetADC() const;
+
+    int setAutoCalibrationADC(const QVector<quint8>& P);
+    int autoCalibrationADC(QVector<quint8>& P) const;
+    QVector<quint8> autoCalibrationADC() const;
+
+    int setUnsetFilter(const QVector<quint8>& P);
+    int unsetFilter(QVector<quint8>& P) const;
+    QVector<quint8> unsetFilter() const;
+
+    int setInputBuffer(const QVector<quint8>& P);
+    int inputBuffer(QVector<quint8>& P) const;
+    QVector<quint8> inputBuffer() const;
+
+    int setStateCurrent(const QVector<quint8>& P);
+    int stateCurrent(QVector<quint8>& P);
+    QVector<quint8> stateCurrent() const;
+
+    int setGainFactor(const QVector<quint8>& P);
+    int gainFactor(QVector<quint8>& P) const;
+    QVector<quint8> gainFactor() const;
+
+    int setFilterFrequency(const QVector<quint8>& P);
+    int filterFrequency(QVector<quint8>& P) const;
+    QVector<quint8> filterFrequency() const;
+
+    int setMeasureChannel(const QVector<quint8>& P);
+    int measureChannel(QVector<quint8>& P) const;
+    QVector<quint8> measureChannel() const;
+
+    int setSupportingResistor(const QVector<quint8>& P);
+    int supportingResistor(QVector<quint8>& P);
+    QVector<quint8> supportingResistor() const;
+
+    int setValuePolarityCurrent(const QVector<quint8>& P);
+    int valuePolarityCurrent(QVector<quint8>& P) const;
+    QVector<quint8> valuePolarityCurrent() const;
+
+    int setVoltageChannel(const QVector<quint8>& P);
+    int voltageChannel(QVector<quint8>& P) const;
+    QVector<quint8> voltageChannel() const;
+
+    int setPauseBeforeMeasure(const QVector<quint8>& P);
+    int pauseBeforeMeasure(QVector<quint8>& P) const;
+    QVector<quint8> pauseBeforeMeasure() const;
+
+    int setAmountMeasurements(const QVector<quint8>& P);
+    int amountMeasurements(QVector<quint8>& P) const;
+    QVector<quint8> amountMeasurements() const;
+
+    int setAmountAverage(const QVector<quint8>& P);
+    int amountAverage(QVector<quint8>& P) const;
+    QVector<quint8> amountAverage() const;
+
+    int setPack(const QString& P);
+    QString pack();
+
     int getErr() const;
 };
 

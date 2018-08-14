@@ -16,14 +16,15 @@
 #include "excel.h"
 #endif
 
+class MyHeader;
 class MyTableModel;
 class QCheckBox;
 
-class Table : public QTableView {
+class MyTable : public QTableView {
     Q_OBJECT
 public:
-    explicit Table(QWidget* parent = nullptr);
-    ~Table();
+    explicit MyTable(QWidget* parent = nullptr);
+    ~MyTable();
 
     MyTableModel* model() const;
     QVector<bool> checkedRows() const;
@@ -40,10 +41,10 @@ signals:
     void updatePlot(int chNum);
 
 private:
+    MyHeader* m_header;
     MyTableModel* m_model;
-
-    QString m_curFile;
     QCheckBox* c = nullptr;
+    QString m_curFile;
 
 #ifdef EXCEL
     Excel::Application* excel;

@@ -37,7 +37,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_1">
        <attribute name="title">
@@ -425,7 +425,7 @@
          </widget>
         </item>
         <item row="1" column="0" colspan="3">
-         <widget class="Table" name="table"/>
+         <widget class="MyTable" name="table"/>
         </item>
         <item row="2" column="0" colspan="3">
          <widget class="QPushButton" name="pbStartStop">
@@ -904,9 +904,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>Table</class>
+   <class>MyTable</class>
    <extends>QTableWidget</extends>
-   <header>table.h</header>
+   <header>mytable.h</header>
   </customwidget>
   <customwidget>
    <class>QChartView</class>

@@ -1,4 +1,4 @@
-#include "table.h"
+#include "mytable.h"
 #include "myheader.h"
 #include "mytablemodel.h"
 #include <QApplication>
@@ -9,61 +9,52 @@
 #include <QSettings>
 #include <QTimer>
 
-Table::Table(QWidget* parent)
+MyTable::MyTable(QWidget* parent)
     : QTableView(/*RowCount, ColumnCount, */ parent)
+    , m_header(new MyHeader(Qt::Vertical, this))
     , m_model(new MyTableModel(this))
 #ifdef EXCEL
     , excel(new Excel::Application(this))
 #endif
 {
     setModel(m_model);
+    setVerticalHeader(m_header);
+
+    connect(m_model, &MyTableModel::dataChanged, [=](const QModelIndex& topLeft, const QModelIndex& /*bottomRight*/, const QVector<int>& /*roles*/) {
+        updatePlot(topLeft.row());
+        resizeRowToContents(topLeft.row());
+    });
 
     QAbstractButton* cornerButton = findChild<QAbstractButton*>();
     if (cornerButton) {
         c = new QCheckBox("№", cornerButton);
         c->setGeometry(cornerButton->rect() + QMargins(-5, 0, 100, 0));
-        connect(c, &QCheckBox::toggled, [this](bool checked) { reinterpret_cast<MyHeader*>(verticalHeader())->setChecked(checked); });
+        connect(c, &QCheckBox::toggled, [this](bool checked) { m_header->setChecked(checked); });
     }
 
-    //    setHorizontalHeader(new MyHeader(Qt::Horizontal, this));
-    setVerticalHeader(new MyHeader(Qt::Vertical, this));
-
-    connect(m_model, &MyTableModel::dataChanged, [=](const QModelIndex& topLeft, const QModelIndex& /*bottomRight*/, const QVector<int>& /*roles*/) {
-        updatePlot(topLeft.row());
-    });
-
-    connect(reinterpret_cast<MyHeader*>(verticalHeader()), &MyHeader::checkedChanged, m_model, &MyTableModel::setRowsEnabled);
+    connect(m_header, &MyHeader::checkedChanged, m_model, &MyTableModel::setRowsEnabled);
 
     setColumnHidden(MeasureDeltaCh0, true);
-    //    setColumnHidden(MeasurePpmCh0, true);
     setColumnHidden(MeasureDeltaCh1, true);
-    //    setColumnHidden(MeasurePpmCh1, true);
-
-    setIconSize(QSize(24, 24));
 
     horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     horizontalHeader()->setSectionResizeMode(MeasureCh0, QHeaderView::Stretch);
     horizontalHeader()->setSectionResizeMode(MeasureCh1, QHeaderView::Stretch);
 
-    //        Interactive,
-    //        Stretch,
-    //        Fixed,
-
-    //    resizeEvent(nullptr);
-
+    setIconSize(QSize(24, 24));
 #ifdef EXCEL
     excel->SetVisible(true);
 #endif
 }
 
-Table::~Table()
+MyTable::~MyTable()
 {
 #ifdef EXCEL
     excel->Quit();
 #endif
 }
 
-void Table::loadFile(const QString& fileName)
+void MyTable::loadFile(const QString& fileName)
 {
     qDebug() << "LoadFile" << fileName;
 #ifdef EXCEL
@@ -118,10 +109,11 @@ void Table::loadFile(const QString& fileName)
     }
     excel->dynamicCall("Quit()");
     excel->deleteLater();
+    resizeRowsToContents();
 #endif
 }
 
-void Table::saveFile(const QString& fileName, const QString& asptNum, const QString& fio)
+void MyTable::saveFile(const QString& fileName, const QString& asptNum, const QString& fio)
 {
     qDebug() << "SaveFile" << fileName << asptNum << fio;
 #ifdef EXCEL
@@ -206,11 +198,12 @@ void Table::saveFile(const QString& fileName, const QString& asptNum, const QStr
                 }
             }
         }
-        if (newFile) {
+
+        if (newFile)
             workbook->dynamicCall("SaveAs(const QVariant&)", QVariant(QString(fileName).replace('/', '\\')));
-        } else {
+        else
             workbook->dynamicCall("Save()");
-        }
+
         workbook->dynamicCall("Close()");
     }
     excel->dynamicCall("Quit()");
@@ -218,7 +211,7 @@ void Table::saveFile(const QString& fileName, const QString& asptNum, const QStr
 #endif
 }
 
-void Table::printFile(const QString& fileName)
+void MyTable::printFile(const QString& fileName)
 {
     qDebug() << "PrintFile" << fileName;
 #ifdef EXCEL
@@ -245,25 +238,28 @@ void Table::printFile(const QString& fileName)
 #endif
 }
 
-MyTableModel* Table::model() const { return m_model; }
+MyTableModel* MyTable::model() const
+{
+    return m_model;
+}
 
-void Table::enableDelta(bool checked)
+void MyTable::enableDelta(bool checked)
 {
     setColumnHidden(MeasureDeltaCh0, !checked);
     setColumnHidden(MeasureDeltaCh1, !checked);
 }
 
-QVector<bool> Table::checkedRows() const
+QVector<bool> MyTable::checkedRows() const
 {
-    return reinterpret_cast<MyHeader*>(verticalHeader())->m_checked;
+    return m_header->m_checked;
 }
 
-void Table::setCurrentFile(const QString& value)
+void MyTable::setCurrentFile(const QString& value)
 {
     m_curFile = value;
 }
 
-void Table::setEnabledCheckBoxes(bool enabled)
+void MyTable::setEnabledCheckBoxes(bool enabled)
 {
     verticalHeader()->setEnabled(enabled);
     if (c)

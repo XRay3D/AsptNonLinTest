@@ -2,7 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QDateTimeEdit>
+#include <QEvent>
 #include <QLabel>
+#include <QLineSeries>
 #include <QList>
 #include <QMainWindow>
 #include <QProgressBar>
@@ -10,11 +12,9 @@
 #include <QSerialPortInfo>
 #include <QTimer>
 #include <QtWinExtras>
-#include <QEvent>
-#include <QLineSeries>
 
-#include "table.h"
 #include "measuring_interface/mi.h"
+#include "mytable.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -57,8 +57,9 @@ private:
     //////////////////////////////////////////////////////////////////////////////////////
 signals:
     void goFindDevices();
-    void goMeasure(const QVector<QPair<int, int> >&, int);
-    void stopWork();
+    void goMeasure(const QVector<QPair<int, int>>&, int);
+    void stopWork(int count = 1);
+    void setResistor(int r = 0);
 
 private slots:
     //////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +114,7 @@ private:
 
     QElapsedTimer elapsedTimer;
     int elapsedMs;
-    QVector<QPair<int, int> > channels;
+    QVector<QPair<int, int>> channels;
 
     enum { MaxRecentFiles = 5 };
     QAction* recentFileActs[MaxRecentFiles];

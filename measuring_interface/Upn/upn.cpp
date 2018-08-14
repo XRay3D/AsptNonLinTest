@@ -1,7 +1,7 @@
 #include "upn.h"
 
-#include <QSerialPortInfo>
 #include <QDebug>
+#include <QSerialPortInfo>
 #include <QTimer>
 
 #define DBG 1
@@ -150,24 +150,32 @@ QVector<double> Upn::resistors() const
 
 void Upn::RxPing(const QByteArray& data)
 {
+    if (DBG)
+        qDebug() << "RxPing" << data.toHex().toUpper();
     Q_UNUSED(data)
     m_semaphore.release();
 }
 
 void Upn::RxSetResistor(const QByteArray& data)
 {
+    if (DBG)
+        qDebug() << "RxSetResistor" << data.toHex().toUpper();
     Q_UNUSED(data)
     m_semaphore.release();
 }
 
 void Upn::RxWriteResistorValue(const QByteArray& data)
 {
+    if (DBG)
+        qDebug() << "RxWriteResistorValue" << data.toHex().toUpper();
     Q_UNUSED(data)
     m_semaphore.release();
 }
 
 void Upn::RxReadResistorValue(const QByteArray& data)
 {
+    if (DBG)
+        qDebug() << "RxReadResistorValue" << data.toHex().toUpper();
     Q_UNUSED(data)
     m_semaphore.release();
 }
@@ -263,6 +271,7 @@ void UpnPort::Open(int mode)
 
 void UpnPort::Write(const QByteArray& data)
 {
+    qDebug() << "Write" << data.toHex().toUpper();
     write(data);
 }
 
@@ -270,6 +279,9 @@ void UpnPort::ReadyRead()
 {
     QMutexLocker Locker(&m_mutex);
     m_data.append(readAll());
+
+    qDebug() << "ReadyRead" << m_data.toHex().toUpper();
+
     for (int i = 0; i < m_data.size() - 3; ++i) {
         const Parcel_tp* p = reinterpret_cast<const Parcel_tp*>(m_data.constData() + i);
         if (p->Start == ReceiveStartPattern) {
