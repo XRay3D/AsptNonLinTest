@@ -4,6 +4,26 @@
 #include <QSerialPortInfo>
 #include <QTimer>
 
+class PortControl {
+public:
+    PortControl(Upn* upn)
+        : m_upn(upn)
+        , m_semaphore(&upn->m_semaphore)
+    {
+        //            emit m_upn->Open(QSerialPort::ReadWrite);
+        //            m_semaphore->tryAcquire(1, 1000);
+    }
+    ~PortControl()
+    {
+        //            emit m_upn->Close();
+        //            m_semaphore->tryAcquire(1, 1000);
+    }
+
+private:
+    Upn* m_upn;
+    QSemaphore* m_semaphore;
+};
+
 #define DBG 1
 
 enum Relay {
@@ -70,21 +90,28 @@ bool Upn::Ping(const QString& PortName)
 
         PortControl control(this);
 
-        //        emit Open(QSerialPort::ReadWrite);
-        //        if (!m_semaphore.tryAcquire(1, 1000))
-        //            break;
+        emit Open(QSerialPort::ReadWrite);
+        if (!m_semaphore.tryAcquire(1, 1000))
+            break;
 
         emit Write(Parcel(PING));
         if (!m_semaphore.tryAcquire(1, 100))
             break;
 
-        m_connected = true;
+        return m_connected = true;
     } while (0);
 
-    //    emit Close();
-    //    m_semaphore.tryAcquire(1, 1000);
+    emit Close();
+    m_semaphore.tryAcquire(1, 1000);
 
     return m_connected;
+}
+
+bool Upn::close()
+{
+    m_semaphore.acquire(m_semaphore.available());
+    emit Close();
+    return m_semaphore.tryAcquire(1, 1000);
 }
 
 bool Upn::setResistor(int r)

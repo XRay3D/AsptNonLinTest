@@ -14,7 +14,6 @@ MyTable::MyTable(QWidget* parent)
     : QTableView(/*RowCount, ColumnCount, */ parent)
     , m_header(new MyHeader(Qt::Vertical, this))
     , m_model(new MyTableModel(this))
-
 {
     setModel(m_model);
     setVerticalHeader(m_header);
@@ -51,20 +50,19 @@ void MyTable::loadFile(const QString& fileName)
 {
     qDebug() << "LoadFile" << fileName;
 
-    QFile file(QString("%1/%2/%3.bin")
-                   .arg(qApp->applicationDirPath())
-                   .arg("proto")
-                   .arg(QFileInfo(fileName).fileName()));
+    QFile file(QString("%1/proto/%2.bin").arg(qApp->applicationDirPath()).arg(QFileInfo(fileName).fileName()));
     if (file.open(QIODevice::ReadOnly)) {
-        QDataStream out(&file);
-        for (int i = 0; i < 16; ++i)
-            out >> m_model->getData(i);
+        QDataStream in(&file);
+        for (int i = 0; i < RowCount; ++i) {
+            m_model->clearData(i);
+            in >> m_model->getData(i);
+        }
+        qDebug() << file;
+        file.close();
+        resizeRowsToContents();
         return;
     }
-
-    loadFile(fileName, m_model);
-
-    resizeEvent(0);
+    ExcelAx::loadFile(fileName, m_model);
     resizeRowsToContents();
 }
 
@@ -72,17 +70,15 @@ void MyTable::saveFile(const QString& fileName, const QString& asptNum, const QS
 {
     qDebug() << "SaveFile" << fileName << asptNum << fio;
 
-    QFile file(QString("%1/%2/%3.bin")
-                   .arg(qApp->applicationDirPath())
-                   .arg("proto")
-                   .arg(QFileInfo(fileName).fileName()));
+    QFile file(QString("%1/proto/%2.bin").arg(qApp->applicationDirPath()).arg(QFileInfo(fileName).fileName()));
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);
-        for (int i = 0; i < 16; ++i)
+        for (int i = 0; i < RowCount; ++i)
             out << m_model->getData(i);
+        file.close();
     }
-
-    saveFile(fileName, asptNum, fio, m_model);
+    qDebug() << file;
+    ExcelAx::saveFile(fileName, asptNum, fio, m_model);
 }
 
 void MyTable::printFile(const QString& fileName)
@@ -101,8 +97,6 @@ void MyTable::enableDelta(bool checked)
 }
 
 QVector<bool> MyTable::checkedRows() const { return m_header->m_checked; }
-
-void MyTable::setCurrentFile(const QString& value) { m_curFile = value; }
 
 void MyTable::setEnabledCheckBoxes(bool enabled)
 {

@@ -33,7 +33,6 @@ public:
 
     void printFile(const QString& fileName);
 
-    void setCurrentFile(const QString& value);
     void setEnabledCheckBoxes(bool enabled);
 
 signals:
@@ -43,7 +42,6 @@ private:
     MyHeader* m_header;
     MyTableModel* m_model;
     QCheckBox* c = nullptr;
-    QString m_curFile;
 };
 
 #endif // TABLE_H

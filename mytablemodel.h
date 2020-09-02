@@ -11,7 +11,8 @@ class MyTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
-    MyTableModel(QObject* parent = Q_NULLPTR);
+    MyTableModel(QObject* parent = nullptr);
+    ~MyTableModel() override;
     void setRowsEnabled(const QVector<bool>& rowEnabled, int);
 
     void setMax(double value);
@@ -21,7 +22,8 @@ public:
     void clearData(int row);
 
     QVector<double> getData(int row, int pos) const;
-    RowData getData(int row) const;
+    RowData& getData(int row);
+    const RowData& getData(int row) const;
     void addData(int row, int pos, double value);
 
     // QAbstractItemModel interface
@@ -35,6 +37,9 @@ public:
 private:
     RowData m_data[16];
     bool m_rowEnabled[16];
+
+    void save();
+    void restore();
 };
 
 #endif // MYTABLEMODEL_H

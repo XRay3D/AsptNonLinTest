@@ -3,10 +3,10 @@
 #include <QCoreApplication>
 #include <QSerialPortInfo>
 
-static int id1 = qRegisterMetaType<eDevice>("eDevice");
-static int id2 = qRegisterMetaType<eMessageType>("eMessageType");
-static int id3 = qRegisterMetaType<QVector<QPair<int, int>>>("QVector<QPair<int, int>>");
-static int id4 = qRegisterMetaType<QVector<double>>("QVector<double>");
+const int id1 = qRegisterMetaType<eDevice>("eDevice");
+const int id2 = qRegisterMetaType<eMessageType>("eMessageType");
+const int id3 = qRegisterMetaType<QVector<QPair<int, int>>>("QVector<QPair<int, int>>");
+const int id4 = qRegisterMetaType<QVector<double>>("QVector<double>");
 
 Measure::Measure(QObject* parent)
     : QObject(parent)
@@ -23,23 +23,27 @@ void Measure::searchDevices()
     resetSemaphore();
     QList<QSerialPortInfo> ports(QSerialPortInfo::availablePorts());
     std::sort(ports.begin(), ports.end(), [](const QSerialPortInfo& a, const QSerialPortInfo& b) { return a.portName().mid(3).toInt() < b.portName().mid(3).toInt(); });
+    QElapsedTimer t;
     for (QSerialPortInfo& portInfo : ports) {
         if (checkStop())
             break;
-        if (MI::aspt->Ping(portInfo.portName())) {
-            m_beep.play();
-            emit deviceFound(DeviceAspt, portInfo.portName(), MI::aspt->SerialNumber());
+        t.start();
+        if (MI::upn->Ping(portInfo.portName()) && MI::upn->readResistorValue()) {
+            emit deviceFound(DeviceUpt, portInfo.portName(), MI::upn->resistors().last());
+            MI::upn->close();
         }
-        emit deviceFound(DeviceProgres);
+        qDebug() << "upn" << t.elapsed();
 
         if (checkStop())
             break;
-        if (MI::upn->Ping(portInfo.portName())) {
-            if (MI::upn->readResistorValue()) {
-                m_beep.play();
-                emit deviceFound(DeviceUpt, portInfo.portName(), MI::upn->resistors().last());
-            }
+        t.start();
+        if (MI::aspt->Ping(portInfo.portName())) {
+            emit deviceFound(DeviceAspt, portInfo.portName(), MI::aspt->serialNumber());
+            MI::aspt->close();
         }
+        qDebug() << "aspt" << t.elapsed();
+        emit deviceFound(DeviceProgres);
+
         emit deviceFound(DeviceProgres);
     }
     emit deviceFound(DeviceStopSearch);
@@ -49,7 +53,7 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
 {
     resetSemaphore();
 
-    if (MI::aspt->Initialize() != ASPT_OK) {
+    if (MI::aspt->initialize() != Error::ASPT_OK) {
         emit doMessage(CheckAsptConnection, 0);
         return;
     }
@@ -62,7 +66,7 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
             return;
         }
 
-        if (MI::aspt->Correction() != ASPT_OK) {
+        if (MI::aspt->correction() != Error::ASPT_OK) {
             emit doMessage(CheckAsptConnection, 0);
             return;
         }
@@ -110,7 +114,7 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
                 //                        return;
                 if (checkStop())
                     return;
-                if (MI::aspt->GetMeasureValue(ADCCfg, vtR4W, 1.0, v) != 0) {
+                if (MI::aspt->getMeasureValue(ADCCfg, vtR4W, 1.0, v) != 0) {
                     emit doMessage(CheckAsptConnection, 0);
                     return;
                 }

@@ -10,7 +10,7 @@ public:
 
 protected:
     void loadFile(const QString& fileName, MyTableModel* m_model);
-    void saveFile(QString& fileName, const QString& asptNum, const QString& fio, MyTableModel* m_model);
+    void saveFile(const QString& fileName, const QString& asptNum, const QString& fio, MyTableModel* m_model);
 
     void printFile(const QString& fileName);
 };

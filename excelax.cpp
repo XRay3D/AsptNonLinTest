@@ -3,25 +3,26 @@
 #include <QApplication>
 #include <QAxObject>
 #include <QDateTime>
+#include <QFileInfo>
 
-ExcelAx::ExcelAx()
-{
-}
+ExcelAx::ExcelAx() { }
 
 void ExcelAx::loadFile(const QString& fileName, MyTableModel* m_model)
 {
     QAxObject* excel = new QAxObject("Excel.Application", 0);
     excel->dynamicCall("SetVisible(bool)", true);
+
     QAxObject* workbooks = excel->querySubObject("Workbooks");
     QAxObject* workbook = workbooks->querySubObject("Open(const QString&)", fileName);
     QAxObject* sheets = workbook->querySubObject("Worksheets");
-    QVariant value;
+
     if (workbooks->dynamicCall("Count()").toInt()) {
         QAxObject* sheet = sheets->querySubObject("Item(int)", 1);
         for (int devCh = 0; devCh < RowCount; ++devCh) {
             m_model->clearData(devCh);
             for (int adcCh = 0; adcCh < 2; ++adcCh) {
                 for (int resCh = 0; resCh < 3; ++resCh) {
+                    QVariant value;
                     if (!adcCh) {
                         QAxObject* cell = sheet->querySubObject("Cells(int,int)", 6 + devCh * 3 + resCh, 4);
                         value = cell->dynamicCall("Value()");
@@ -35,21 +36,26 @@ void ExcelAx::loadFile(const QString& fileName, MyTableModel* m_model)
         }
         workbook->dynamicCall("Close()");
     }
+
     excel->dynamicCall("Quit()");
     excel->deleteLater();
 }
 
-void ExcelAx::saveFile(QString& fileName, const QString& asptNum, const QString& fio, MyTableModel* m_model)
+void ExcelAx::saveFile(const QString& fileName, const QString& asptNum, const QString& fio, MyTableModel* m_model)
 {
-    bool newFile = false;
+    const bool newFile = !QFileInfo::exists(fileName);
+
     QAxObject* excel = new QAxObject("Excel.Application", 0);
     excel->dynamicCall("SetVisible(bool)", true);
+
     QAxObject* workbooks = excel->querySubObject("Workbooks");
-    if (fileName.isEmpty()) {
-        fileName = qApp->applicationDirPath() + "/blank.xlsx";
-        newFile = true;
-    }
-    QAxObject* workbook = workbooks->querySubObject("Open(const QString&)", fileName);
+    QAxObject* workbook = nullptr;
+
+    if (newFile)
+        workbook = workbooks->querySubObject("Open(const QString&)", qApp->applicationDirPath() + "/blank.xlsx");
+    else
+        workbook = workbooks->querySubObject("Open(const QString&)", fileName);
+
     QAxObject* sheets = workbook->querySubObject("Worksheets");
     if (workbooks->dynamicCall("Count()").toInt()) {
         QAxObject* sheet = sheets->querySubObject("Item(int)", 1);

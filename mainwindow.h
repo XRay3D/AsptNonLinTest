@@ -15,6 +15,7 @@
 
 #include "measuring_interface/mi.h"
 #include "mytable.h"
+#include "recent.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -29,6 +30,7 @@ class MainWindow;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
+    friend Recent;
 
 public:
     explicit MainWindow(QWidget* parent = 0);
@@ -41,8 +43,6 @@ private:
     Ui::MainWindow* ui;
     QIcon Start;
     QIcon Stop;
-
-    QString messageTitle;
 
     QTimer statusBarTimer;
     QProgressBar progressBar;
@@ -91,15 +91,16 @@ private:
     void loadFile(const QString& fileName);
     void saveFile(const QString& fileName);
     void setCurrentFile(const QString& fileName);
-    void updateRecentFileActions();
 
     QString strippedName(const QString& fullFileName);
 
     QString curFile;
     QString lastPath;
 
+    Recent recentFiles;
+
     QMenu* fileMenu;
-    QMenu* recentFilesMenu;
+    //    QMenu* recentFilesMenu;
     QMenu* helpMenu;
     //    QAction* newAct;
     QAction* openAct;
@@ -107,7 +108,6 @@ private:
     QAction* saveAsAct;
     QAction* exitAct;
     QAction* aboutQtAct;
-    QAction* separatorAct;
     QAction* printAct;
 
     QVector<QLineSeries*> series;
@@ -116,8 +116,8 @@ private:
     int elapsedMs;
     QVector<QPair<int, int>> channels;
 
-    enum { MaxRecentFiles = 5 };
-    QAction* recentFileActs[MaxRecentFiles];
+    //    enum { MaxRecentFiles = 5 };
+    //    QAction* recentFileActs[MaxRecentFiles];
     //////////////////////////////////////////////////////////////////////////////////////
     //private slots:
     void newFile();

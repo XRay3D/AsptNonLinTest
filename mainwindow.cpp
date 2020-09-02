@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget* parent)
     , ui(new Ui::MainWindow)
     , Start(QStringLiteral(":/res/image2.png") /*QIcon::fromTheme("draw-triangle2")*/)
     , Stop(QStringLiteral(":/res/image3.png") /*QIcon::fromTheme("draw-rectangle")*/)
+    , recentFiles(this, "proto")
 {
     ui->setupUi(this);
 
@@ -72,7 +73,7 @@ void MainWindow::handleDeviceFound(eDevice dev, const QString& portName, double 
         if (ui->cbxUpn->count())
             MI::upn->Ping(ui->cbxUpn->currentText());
         if (ui->cbxAspt->count())
-            MI::aspt->Ping(ui->cbxUpn->currentText());
+            MI::aspt->Ping(ui->cbxAspt->currentText());
 
         if (ui->cbxAspt->count() && ui->cbxUpn->count())
             ui->pbStartStop->setEnabled(true);
@@ -91,8 +92,8 @@ void MainWindow::handleMessage(eMessageType msgType, int row)
     switch (msgType) {
     case ConnectUptToAspt:
         taskbarProgress->pause();
-        //ui->table->model()->scrollToItem(ui->table->model()->item(row, 0));
-        if (QMessageBox::information(this, messageTitle, QString(tr("Воткни УПН №%1 в канал %2 АСПТ")).arg(ui->leUpnSerNum->text()).arg(row + 1), "Продолжить", "Остановить проверку", 0, 0) == 1) {
+        ui->table->showRow(row);
+        if (QMessageBox::information(this, ui->leAsptSerNum->text(), QString(tr("Воткни УПН №%1 в канал %2 АСПТ")).arg(ui->leUpnSerNum->text()).arg(row + 1), "Продолжить", "Остановить проверку", 0, 0) == 1) {
             emit stopWork();
         } else {
             ui->table->model()->clearData(row);
@@ -106,7 +107,7 @@ void MainWindow::handleMessage(eMessageType msgType, int row)
     case CheckFinished:
         taskbarProgress->stop();
         activateWindow();
-        QMessageBox::information(this, messageTitle, tr("Проверка закончена!"), tr("Хорошо"), "");
+        QMessageBox::information(this, ui->leAsptSerNum->text(), tr("Проверка закончена!"), tr("Хорошо"), "");
         ui->pbStartStop->clicked(false);
         break;
     case TerminateCheck:
@@ -114,14 +115,14 @@ void MainWindow::handleMessage(eMessageType msgType, int row)
         break;
     case CheckUptConnection:
         ui->pbStartStop->clicked(false);
-        QMessageBox::warning(this, messageTitle, tr("Нет свяи с УПН!"), tr("Хорошо"), "");
+        QMessageBox::warning(this, ui->leAsptSerNum->text(), tr("Нет свяи с УПН!"), tr("Хорошо"), "");
         break;
     case CheckAsptConnection:
         ui->pbStartStop->clicked(false);
-        QMessageBox::warning(this, messageTitle, tr("Нет свяи с АСПТ!"), tr("Хорошо"), "");
+        QMessageBox::warning(this, ui->leAsptSerNum->text(), tr("Нет свяи с АСПТ!"), tr("Хорошо"), "");
         break;
     case CheckUptToAsptConnection:
-        QMessageBox::warning(this, messageTitle, tr("Проверь подключение УПН(%2) к каналу №%1 АСПТ!").arg(row + 1).arg(ui->leUpnSerNum->text()), tr("Хорошо"), "");
+        QMessageBox::warning(this, ui->leAsptSerNum->text(), tr("Проверь подключение УПН(%2) к каналу №%1 АСПТ!").arg(row + 1).arg(ui->leUpnSerNum->text()), tr("Хорошо"), "");
         emit stopWork();
         break;
     }
@@ -144,12 +145,9 @@ void MainWindow::handleMeasure(const double value, int ch, int r)
 
 void MainWindow::updatePlot(int chNum)
 {
-
     auto updateChart = [&](const QVector<int> n, QChartView* graphicsView) {
-        QVector<double> y1;
-        QVector<double> y2;
-        y1 = ui->table->model()->getData(chNum, n[0]);
-        y2 = ui->table->model()->getData(chNum, n[1]);
+        QVector<double> y1(ui->table->model()->getData(chNum, n[0]));
+        QVector<double> y2(ui->table->model()->getData(chNum, n[1]));
         series[n[2]]->clear();
         series[n[3]]->clear();
         if (y1.size() > 1 || y2.size() > 1) {
@@ -157,25 +155,14 @@ void MainWindow::updatePlot(int chNum)
                 series[n[2]]->append(x + 1, y1[x]);
             for (int x = 0, end = y2.size(); x < end; ++x)
                 series[n[3]]->append(x + 1, y2[x]);
-            //            for (int x = series[n[2]]->count(), end = y1.size(); x < end; ++x)
-            //                series[n[2]]->append(x + 1, y1[x]);
-            //            for (int x = series[n[3]]->count(), end = y2.size(); x < end; ++x)
-            //                series[n[3]]->append(x + 1, y2[x]);
-            graphicsView->chart()->axisX()->setRange(1, qMax(y1.size(), y2.size()));
+            graphicsView->chart()->axes(Qt::Horizontal).first()->setRange(1, qMax(y1.size(), y2.size())); /*axisX*/
             y1.append(y2);
-            qSort(y1);
-            graphicsView->chart()->axisY()->setRange(y1.first(), y1.last());
+            std::sort(y1.begin(), y1.end());
+            graphicsView->chart()->axes(Qt::Vertical).first()->setRange(y1.first(), y1.last()); /*axisY*/
         } else {
             double d = 0.0;
             series[n[2]]->append(d, d);
             series[n[3]]->append(d, d);
-            //            d = 0.1;
-            //            series[n[2]]->append(d, d);
-            //            series[n[3]]->append(d, d);
-            //            series[n[2]]->append(0, 0);
-            //            series[n[2]]->append(0, 0);
-            //            graphicsView->chart()->axisX()->setRange(0, 0);
-            //            graphicsView->chart()->axisY()->setRange(0, 0);
         }
     };
 
@@ -187,7 +174,7 @@ void MainWindow::updatePlot(int chNum)
 ///////////////////////////////////////////////////////////////////////////////
 void MainWindow::readSettings()
 {
-    QSettings settings;
+    QSettings settings("AsptNonLinTest.ini", QSettings::IniFormat);
     settings.beginGroup("MainWindow");
     restoreGeometry(settings.value("geometry").toByteArray());
     ui->leFio->setText(settings.value("leFio", "").toString());
@@ -205,7 +192,7 @@ void MainWindow::readSettings()
 
 void MainWindow::writeSettings()
 {
-    QSettings settings;
+    QSettings settings("AsptNonLinTest.ini", QSettings::IniFormat);
     settings.beginGroup("MainWindow");
     settings.setValue("geometry", saveGeometry());
     settings.setValue("leFio", ui->leFio->text());
@@ -229,7 +216,7 @@ void MainWindow::newFile()
 void MainWindow::open()
 {
     QString fileName = QFileDialog::getOpenFileName(
-        this, "Открыть файл", lastPath, "Image Files (*.xls *.xlsx *.csv)");
+        this, "Открыть файл", lastPath, "Image Files (*.xls *.xlsx)");
     if (!fileName.isEmpty())
         loadFile(fileName);
 }
@@ -244,7 +231,7 @@ void MainWindow::save()
 
 void MainWindow::saveAs()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Сохранить файл", lastPath + "/" + messageTitle + QDate::currentDate().toString(" от dd.MM.yyyy г.xlsx"), "(*.xls *.xlsx)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Сохранить файл", lastPath + "/" + ui->leAsptSerNum->text() + QDate::currentDate().toString(" от dd.MM.yyyy г.xlsx"), "(*.xls *.xlsx)");
     if (fileName.isEmpty())
         return;
     saveFile(fileName);
@@ -253,7 +240,7 @@ void MainWindow::saveAs()
 void MainWindow::print()
 {
     if (!curFile.isEmpty()) {
-        ui->table->saveFile(curFile, messageTitle, ui->leFio->text());
+        ui->table->saveFile(curFile, ui->leAsptSerNum->text(), ui->leFio->text());
         ui->table->printFile(curFile);
     }
 }
@@ -287,12 +274,6 @@ void MainWindow::createActions()
     printAct->setStatusTip(tr("Распечатать текущий документ"));
     connect(printAct, &QAction::triggered, this, &MainWindow::print);
 
-    for (int i = 0; i < MaxRecentFiles; ++i) {
-        recentFileActs[i] = new QAction(this);
-        recentFileActs[i]->setVisible(false);
-        connect(recentFileActs[i], &QAction::triggered, this, &MainWindow::openRecentFile);
-    }
-
     exitAct = new QAction(tr("Выход"), this);
     exitAct->setShortcuts(QKeySequence::Quit);
     exitAct->setStatusTip(tr("Выход из приложения"));
@@ -310,19 +291,21 @@ void MainWindow::createMenus()
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);
     fileMenu->addAction(saveAsAct);
-    separatorAct = fileMenu->addSeparator();
+
+    fileMenu->addSeparator();
     fileMenu->addAction(printAct);
-    separatorAct = fileMenu->addSeparator();
-    for (int i = 0; i < MaxRecentFiles; ++i)
-        fileMenu->addAction(recentFileActs[i]);
+
+    fileMenu->addSeparator();
+    recentFiles.createMenu(fileMenu, "Предыдущие протоколы");
+
     fileMenu->addSeparator();
     fileMenu->addAction(exitAct);
-    updateRecentFileActions();
 
     menuBar()->addSeparator();
-
     helpMenu = menuBar()->addMenu(tr("&Справка"));
     helpMenu->addAction(aboutQtAct);
+
+    connect(fileMenu, &QMenu::aboutToShow, [this] { printAct->setEnabled(QFileInfo::exists(curFile)); });
 }
 
 void MainWindow::loadFile(const QString& fileName)
@@ -342,7 +325,7 @@ void MainWindow::loadFile(const QString& fileName)
 void MainWindow::saveFile(const QString& fileName)
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    ui->table->saveFile(fileName, messageTitle, ui->leFio->text());
+    ui->table->saveFile(fileName, ui->leAsptSerNum->text(), ui->leFio->text());
     QApplication::restoreOverrideCursor();
     setCurrentFile(fileName);
     statusBar()->showMessage(tr("Файл сохранен"), 2000);
@@ -353,44 +336,10 @@ void MainWindow::setCurrentFile(const QString& fileName)
     curFile = fileName;
     lastPath = QFileInfo(curFile).path();
     setWindowTitle(QFileInfo(curFile).fileName());
-    QSettings settings;
-    QStringList files = settings.value("recentFileList").toStringList();
-    files.removeAll(fileName);
-    files.prepend(fileName);
-    while (files.size() > MaxRecentFiles)
-        files.removeLast();
-
-    settings.setValue("recentFileList", files);
-
-    foreach (QWidget* widget, QApplication::topLevelWidgets()) {
-        MainWindow* mainWin = qobject_cast<MainWindow*>(widget);
-        if (mainWin)
-            mainWin->updateRecentFileActions();
-    }
+    recentFiles.prependToRecentFiles(fileName);
 }
 
-void MainWindow::updateRecentFileActions()
-{
-    QSettings settings;
-    QStringList files = settings.value("recentFileList").toStringList();
-
-    int numRecentFiles = qMin(files.size(), static_cast<int>(MaxRecentFiles));
-
-    for (int i = 0; i < numRecentFiles; ++i) {
-        QString text = tr("&%1 %2").arg(i + 1).arg(strippedName(files[i]));
-        recentFileActs[i]->setText(text);
-        recentFileActs[i]->setData(files[i]);
-        recentFileActs[i]->setVisible(true);
-    }
-    for (int j = numRecentFiles; j < MaxRecentFiles; ++j)
-        recentFileActs[j]->setVisible(false);
-    separatorAct->setVisible(numRecentFiles > 0);
-}
-
-QString MainWindow::strippedName(const QString& fullFileName)
-{
-    return QFileInfo(fullFileName).fileName();
-}
+QString MainWindow::strippedName(const QString& fullFileName) { return QFileInfo(fullFileName).fileName(); }
 
 void MainWindow::on_pbUpnRead_clicked()
 {
@@ -485,11 +434,10 @@ void MainWindow::connectObjects()
 
     connect(ui->chbxDelta, &QCheckBox::toggled, ui->table, &MyTable::enableDelta);
     connect(ui->pbClear, &QPushButton::clicked, ui->table->model(), &MyTableModel::clearSelectedData);
-    connect(ui->leAsptSerNum, &QLineEdit::textChanged, [&](const QString& text) { messageTitle = text; });
 
-    connect(ui->cbxAspt, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::currentIndexChanged);
-    connect(ui->cbxUpn, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::currentIndexChanged);
-    connect(ui->cbxUpn, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), MI::upn, &Upn::Ping);
+    connect(ui->cbxAspt, qOverload<int>(&QComboBox::currentIndexChanged), this, &MainWindow::currentIndexChanged);
+    connect(ui->cbxUpn, qOverload<int>(&QComboBox::currentIndexChanged), this, &MainWindow::currentIndexChanged);
+    connect(ui->cbxUpn, qOverload<const QString&>(&QComboBox::currentIndexChanged), MI::upn, &Upn::Ping);
 
     connect(ui->pbFindDevices, &QPushButton::clicked, [=](bool checked) {
         if (checked) {
@@ -533,6 +481,8 @@ void MainWindow::connectObjects()
         ui->table->model()->setMax(arg1);
     });
 
+    connect(ui->leFio, &QLineEdit::textChanged, [this](const QString& text) { ui->pbStartStop->setEnabled(text == "skip"); });
+
     connect(ui->pbStartStop, &QPushButton::clicked, [=](bool checked) {
         if (checked) {
             channels.clear();
@@ -541,7 +491,7 @@ void MainWindow::connectObjects()
                     channels.append(qMakePair(int(row), int(3)));
             }
             if (channels.isEmpty()) {
-                QMessageBox::warning(this, messageTitle, tr("Не выбран ни один канал для измерения!"), tr("Хорошо"));
+                QMessageBox::warning(this, ui->leAsptSerNum->text(), tr("Не выбран ни один канал для измерения!"), tr("Хорошо"));
                 ui->pbStartStop->setChecked(false);
                 return;
             }
@@ -549,7 +499,6 @@ void MainWindow::connectObjects()
             MI::upn->Ping(ui->cbxUpn->currentText());
             ui->pbStartStop->setIcon(Stop);
             ui->pbStartStop->setText(tr("Закончить проверку"));
-            ui->table->setCurrentFile(curFile);
             setProgressVisible(true);
             elapsedMs = 0;
             emit goMeasure(channels, ui->sbxMeasNum->value() + ui->sbxSkipMeasNum->value());

@@ -4,15 +4,9 @@ double RowData::m_max = 0.0001;
 double RowData::m_min = 0.001;
 int RowData::m_skip = 10;
 
-RowData::RowData()
-{
-    clearData();
-}
+RowData::RowData() { clearData(); }
 
-double RowData::average(int pos) const
-{
-    return m_average[pos];
-}
+double RowData::average(int pos) const { return m_average[pos]; }
 
 void RowData::clearData()
 {
@@ -39,20 +33,22 @@ void RowData::clearData()
     }
 }
 
-QVector<double> RowData::getData(int pos) const
-{
-    return m_data[pos];
-}
+QVector<double> RowData::getData(int pos) const { return m_data[pos]; }
 
 void RowData::addData(const int pos, double val)
+{
+    m_data[pos].append(val);
+    update(pos);
+}
+
+void RowData::update(const int pos)
 {
     double delta;
     double min = 0.0;
     double max = 0.0;
-    m_data[pos].append(val);
     if (m_data[pos].count()) {
         QVector<double> v(m_data[pos]);
-        qSort(v);
+        std::sort(v.begin(), v.end());
         min = v.first();
         max = v.last();
         m_average[pos] = 0;

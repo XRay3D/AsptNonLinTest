@@ -10,7 +10,7 @@ MyHeader::MyHeader(Qt::Orientation orientation, QWidget* parent)
     : QHeaderView(orientation, parent)
     , m_checked(16, false)
 {
-    QSettings settings;
+    QSettings settings("AsptNonLinTest.ini", QSettings::IniFormat);
     int size = settings.beginReadArray("MyHeader" + QString::number(orientation));
     for (int i = 0, key = 0; i < size; ++i) {
         settings.setArrayIndex(i);
@@ -27,7 +27,7 @@ MyHeader::MyHeader(Qt::Orientation orientation, QWidget* parent)
 
 MyHeader::~MyHeader()
 {
-    QSettings settings;
+    QSettings settings("AsptNonLinTest.ini", QSettings::IniFormat);
     settings.beginWriteArray("MyHeader" + QString::number(orientation()));
     for (int i = 0; i < m_checked.size(); ++i) {
         settings.setArrayIndex(i);

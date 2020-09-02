@@ -1,11 +1,18 @@
 #include "mytablemodel.h"
 
+#include <QFile>
 #include <QMessageBox>
 
 MyTableModel::MyTableModel(QObject* parent)
     : QAbstractTableModel(parent)
     , m_rowEnabled{ false }
 {
+    restore();
+}
+
+MyTableModel::~MyTableModel()
+{
+    save();
 }
 
 void MyTableModel::setRowsEnabled(const QVector<bool>& rowEnabled, int)
@@ -69,10 +76,9 @@ QVector<double> MyTableModel::getData(int row, int pos) const
     return m_data[row].getData(pos);
 }
 
-RowData MyTableModel::getData(int row) const
-{
-    return m_data[row];
-}
+RowData& MyTableModel::getData(int row) { return m_data[row]; }
+
+const RowData& MyTableModel::getData(int row) const { return m_data[row]; }
 
 void MyTableModel::addData(int row, int pos, double value)
 {
@@ -83,6 +89,7 @@ void MyTableModel::addData(int row, int pos, double value)
         emit dataChanged(createIndex(row, SignalCh0), createIndex(row, MeasureCh0), { Qt::DisplayRole });
     else
         emit dataChanged(createIndex(row, SignalCh1), createIndex(row, MeasureCh1), { Qt::DisplayRole });
+    save();
 }
 
 int MyTableModel::rowCount(const QModelIndex& /*parent*/) const
@@ -138,7 +145,7 @@ QVariant MyTableModel::headerData(int section, Qt::Orientation orientation, int 
         if (orientation == Qt::Horizontal)
             return Qt::AlignCenter;
         else
-            return Qt::AlignRight | Qt::AlignVCenter;
+            return { Qt::AlignRight | Qt::AlignVCenter };
     default:
         break;
     }
@@ -148,4 +155,28 @@ QVariant MyTableModel::headerData(int section, Qt::Orientation orientation, int 
 Qt::ItemFlags MyTableModel::flags(const QModelIndex& index) const
 {
     return m_rowEnabled[index.row()] ? Qt::ItemIsEnabled : Qt::NoItemFlags;
+}
+
+void MyTableModel::save()
+{
+    QFile file("backupData.bin");
+    if (file.open(QIODevice::WriteOnly)) {
+        QDataStream out(&file);
+        for (int i = 0; i < RowCount; ++i)
+            out << m_data[i];
+        file.close();
+    }
+}
+
+void MyTableModel::restore()
+{
+    QFile file("backupData.bin");
+    if (file.open(QIODevice::ReadOnly)) {
+        QDataStream in(&file);
+        for (int i = 0; i < RowCount; ++i) {
+            m_data[i].clearData();
+            in >> m_data[i];
+        }
+        file.close();
+    }
 }

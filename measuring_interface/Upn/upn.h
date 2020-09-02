@@ -1,13 +1,13 @@
 #ifndef MY_PROTOCOL_H
 #define MY_PROTOCOL_H
 
-#include <QObject>
-#include <QThread>
-#include <QSerialPort>
-#include <QSemaphore>
-#include <QMutex>
 #include "../common_interfaces.h"
 #include "myprotocol.h"
+#include <QMutex>
+#include <QObject>
+#include <QSemaphore>
+#include <QSerialPort>
+#include <QThread>
 
 #pragma pack(push, 1)
 typedef struct {
@@ -35,6 +35,7 @@ class UpnPort;
 class Upn : public QObject, private MyProtocol, public CommonInterfaces, private Callbacks {
     Q_OBJECT
     friend class UpnPort;
+    friend class PortControl;
 
 public:
     Upn(QObject* parent = 0);
@@ -43,7 +44,7 @@ public:
     // CommonInterfaces interface
     bool IsConnected() const override;
     bool Ping(const QString& PortName = QString()) override;
-
+    bool close();
     bool setResistor(int r);
     bool writeResistorValue(const QVector<double>& r);
     bool readResistorValue();
@@ -75,26 +76,6 @@ private:
     void RxTextualParcel(const QByteArray& data) override;
     void RxCrcError(const QByteArray& data) override;
     void RxNullFunction(const QByteArray& data) override;
-
-    class PortControl {
-    public:
-        PortControl(Upn* upn)
-            : m_upn(upn)
-            , m_semaphore(&upn->m_semaphore)
-        {
-            emit m_upn->Open(QSerialPort::ReadWrite);
-            m_semaphore->tryAcquire(1, 1000);
-        }
-        ~PortControl()
-        {
-            emit m_upn->Close();
-            m_semaphore->tryAcquire(1, 1000);
-        }
-
-    private:
-        Upn* m_upn;
-        QSemaphore* m_semaphore;
-    };
 };
 
 class UpnPort : public QSerialPort, private MyProtocol {
