@@ -69,7 +69,12 @@ void MyTable::loadFile(const QString& fileName)
 void MyTable::saveFile(const QString& fileName, const QString& asptNum, const QString& fio)
 {
     qDebug() << "SaveFile" << fileName << asptNum << fio;
+    saveFile(fileName);
+    ExcelAx::saveFile(fileName, asptNum, fio, m_model);
+}
 
+void MyTable::saveFile(const QString& fileName)
+{
     QFile file(QString("%1/proto/%2.bin").arg(qApp->applicationDirPath()).arg(QFileInfo(fileName).fileName()));
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);
@@ -77,8 +82,6 @@ void MyTable::saveFile(const QString& fileName, const QString& asptNum, const QS
             out << m_model->getData(i);
         file.close();
     }
-    qDebug() << file;
-    ExcelAx::saveFile(fileName, asptNum, fio, m_model);
 }
 
 void MyTable::printFile(const QString& fileName)

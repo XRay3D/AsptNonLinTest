@@ -91,6 +91,8 @@ void MainWindow::handleMessage(eMessageType msgType, int row)
     int count = (ui->sbxMeasNum->value() + ui->sbxSkipMeasNum->value()) * 6;
     switch (msgType) {
     case ConnectUptToAspt:
+        if (!curFile.isEmpty())
+            saveFile(curFile);
         taskbarProgress->pause();
         ui->table->showRow(row);
         if (QMessageBox::information(this, ui->leAsptSerNum->text(), QString(tr("Воткни УПН №%1 в канал %2 АСПТ")).arg(ui->leUpnSerNum->text()).arg(row + 1), "Продолжить", "Остановить проверку", 0, 0) == 1) {
@@ -453,6 +455,9 @@ void MainWindow::connectObjects()
             setProgressVisible(true);
             taskbarProgress->resume();
             progressBar.setValue(0);
+
+            curFile.clear(); ////////////////////////
+
             emit goFindDevices();
         } else {
             emit stopWork();
@@ -480,9 +485,7 @@ void MainWindow::connectObjects()
             ui->dsbxMin->setValue(arg1);
         ui->table->model()->setMax(arg1);
     });
-
-    connect(ui->leFio, &QLineEdit::textChanged, [this](const QString& text) { ui->pbStartStop->setEnabled(text == "skip"); });
-
+    //    connect(ui->leFio, &QLineEdit::textChanged, [this](const QString& text) { ui->pbStartStop->setEnabled(text == "skip"); });
     connect(ui->pbStartStop, &QPushButton::clicked, [=](bool checked) {
         if (checked) {
             channels.clear();

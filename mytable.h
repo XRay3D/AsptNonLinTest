@@ -30,6 +30,7 @@ public:
 
     void loadFile(const QString& fileName);
     void saveFile(const QString& fileName, const QString& asptNum, const QString& fio);
+    void saveFile(const QString& fileName);
 
     void printFile(const QString& fileName);
 
