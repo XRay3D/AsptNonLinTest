@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "rowdata.h"
 #include <QAbstractTableModel>
 
@@ -28,18 +27,18 @@ public:
 
     // QAbstractItemModel interface
 public:
-    int rowCount(const QModelIndex& parent) const override;
-    int columnCount(const QModelIndex& parent) const override;
+    int rowCount(const QModelIndex& = {}) const override;
+    int columnCount(const QModelIndex& = {}) const override;
+
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
+    void save(const QString& backupName = {});
+    void restore(const QString& backupName = {});
+
 private:
+    QString m_backupName;
     RowData m_data[16];
     bool m_rowEnabled[16];
-
-    void save();
-    void restore();
 };
-
-

@@ -58,7 +58,7 @@ void RowData::update(const int pos)
             }
             m_average[pos] /= v.count() - m_skip;
         } else {
-            for (double val : v) {
+            for (double val : qAsConst(v)) {
                 m_average[pos] += val;
             }
             m_average[pos] /= v.count();

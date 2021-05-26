@@ -1,29 +1,27 @@
 #pragma once
 
-
 #include "tableparams.h"
 #include <QDataStream>
 #include <QIcon>
 
 class RowData {
-    friend inline QDataStream& operator>>(QDataStream& s, RowData& d)
-    {
+    friend inline QDataStream& operator>>(QDataStream& s, RowData& d) {
+        d.clearData();
         s >> m_max;
         s >> m_min;
         s >> m_skip;
-        for (auto& var : d.m_data)
+        for(auto& var : d.m_data)
             s >> var;
-        for (int i = 0; i < 6; ++i)
+        for(int i = 0; i < 6; ++i)
             d.update(i);
         return s;
     }
 
-    friend inline QDataStream& operator<<(QDataStream& s, const RowData& d)
-    {
+    friend inline QDataStream& operator<<(QDataStream& s, const RowData& d) {
         s << m_max;
         s << m_min;
         s << m_skip;
-        for (auto& var : d.m_data)
+        for(auto& var : d.m_data)
             s << var;
         return s;
     }
@@ -64,5 +62,3 @@ private:
         CH1
     };
 };
-
-
