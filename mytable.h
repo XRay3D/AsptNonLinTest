@@ -1,7 +1,7 @@
-#ifndef TABLE_H
-#define TABLE_H
+#pragma once
 
-#include "excelax.h"
+
+#include "myexcel.h"
 #include <QCheckBox>
 #include <QDebug>
 #include <QHeaderView>
@@ -17,7 +17,7 @@ class MyHeader;
 class MyTableModel;
 class QCheckBox;
 
-class MyTable : public QTableView, public ExcelAx {
+class MyTable : public QTableView, public MyExcel {
     Q_OBJECT
 public:
     explicit MyTable(QWidget* parent = nullptr);
@@ -45,4 +45,4 @@ private:
     QCheckBox* c = nullptr;
 };
 
-#endif // TABLE_H
+

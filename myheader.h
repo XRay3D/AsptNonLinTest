@@ -1,5 +1,5 @@
-#ifndef MYHEADER_H
-#define MYHEADER_H
+#pragma once
+
 
 #include <QHeaderView>
 
@@ -27,4 +27,4 @@ private:
     QVector<bool> m_checked;
 };
 
-#endif // MYHEADER_H
+

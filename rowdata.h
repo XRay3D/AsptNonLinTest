@@ -1,5 +1,5 @@
-#ifndef ROWDATA_H
-#define ROWDATA_H
+#pragma once
+
 
 #include "tableparams.h"
 #include <QDataStream>
@@ -65,4 +65,4 @@ private:
     };
 };
 
-#endif // ROWDATA_H
+

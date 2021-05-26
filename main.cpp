@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     QApplication::setApplicationName("AsptNonLinTest");
 
     QFont font;
-    font.setPointSize(12);
+    font.setPointSize(10);
     QApplication::setFont(font);
 
     QIcon::setThemeSearchPaths({ QCoreApplication::applicationDirPath() + "/icons/breeze/", QCoreApplication::applicationDirPath() + "/icons/breeze-dark/" });

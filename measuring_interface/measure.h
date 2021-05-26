@@ -1,5 +1,5 @@
-#ifndef MEASURE_H
-#define MEASURE_H
+#pragma once
+
 
 #include <QSemaphore>
 #include <QSound>
@@ -45,4 +45,4 @@ private:
     QSemaphore m_semaphore;
 };
 
-#endif // MEASURE_H
+

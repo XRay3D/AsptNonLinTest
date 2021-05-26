@@ -1,5 +1,5 @@
-#ifndef MYTABLEMODEL_H
-#define MYTABLEMODEL_H
+#pragma once
+
 
 #include "rowdata.h"
 #include <QAbstractTableModel>
@@ -42,4 +42,4 @@ private:
     void restore();
 };
 
-#endif // MYTABLEMODEL_H
+

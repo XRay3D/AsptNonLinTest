@@ -28,18 +28,18 @@ void Measure::searchDevices()
         if (checkStop())
             break;
         t.start();
-        if (MI::upn->Ping(portInfo.portName()) && MI::upn->readResistorValue()) {
-            emit deviceFound(DeviceUpt, portInfo.portName(), MI::upn->resistors().last());
-            MI::upn->close();
+        if (MI::upn()->ping(portInfo.portName()) && MI::upn()->readResistorValue()) {
+            emit deviceFound(DeviceUpt, portInfo.portName(), MI::upn()->resistors().last());
+            MI::upn()->close();
         }
         qDebug() << "upn" << t.elapsed();
 
         if (checkStop())
             break;
         t.start();
-        if (MI::aspt->Ping(portInfo.portName())) {
-            emit deviceFound(DeviceAspt, portInfo.portName(), MI::aspt->serialNumber());
-            MI::aspt->close();
+        if (MI::aspt()->ping(portInfo.portName())) {
+            emit deviceFound(DeviceAspt, portInfo.portName(), MI::aspt()->serialNumber());
+            MI::aspt()->close();
         }
         qDebug() << "aspt" << t.elapsed();
         emit deviceFound(DeviceProgres);
@@ -53,7 +53,7 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
 {
     resetSemaphore();
 
-    if (MI::aspt->initialize() != Error::ASPT_OK) {
+    if (MI::aspt()->initialize() != Error::ASPT_OK) {
         emit doMessage(CheckAsptConnection, 0);
         return;
     }
@@ -66,7 +66,7 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
             return;
         }
 
-        if (MI::aspt->correction() != Error::ASPT_OK) {
+        if (MI::aspt()->correction() != Error::ASPT_OK) {
             emit doMessage(CheckAsptConnection, 0);
             return;
         }
@@ -78,7 +78,7 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
         double v = 0.0;
 
         for (res = 0; res < 6; ++res) {
-            if (!MI::upn->setResistor(res)) {
+            if (!MI::upn()->setResistor(res)) {
                 emit doMessage(CheckUptConnection, 0);
                 return;
             }
@@ -114,7 +114,7 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
                 //                        return;
                 if (checkStop())
                     return;
-                if (MI::aspt->getMeasureValue(ADCCfg, vtR4W, 1.0, v) != 0) {
+                if (MI::aspt()->getMeasureValue(ADCCfg, vtR4W, 1.0, v) != 0) {
                     emit doMessage(CheckAsptConnection, 0);
                     return;
                 }

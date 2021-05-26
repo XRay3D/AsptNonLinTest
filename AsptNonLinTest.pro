@@ -22,6 +22,8 @@ DESTDIR = $$_PRO_FILE_PWD_/bin
 FORMS += mainwindow.ui
 
 include(../aspt/aspt.pri)
+include(excel/excel.pri)
+include(../CommonInterfaces/CommonInterfaces.pri)
 
 RESOURCES += res.qrc
 
@@ -34,41 +36,28 @@ DISTFILES += \
     measuring_interface/ini.txt
 
 HEADERS += \
-#    excel.h \
-    excelax.h \
     mainwindow.h \
-#    measuring_interface/Aspt5/adccfg.h \
-#    measuring_interface/Aspt5/aspt.h \
-#    measuring_interface/Aspt5/global.h \
     measuring_interface/Upn/myprotocol.h \
     measuring_interface/Upn/upn.h \
-    measuring_interface/common_interfaces.h \
     measuring_interface/measure.h \
     measuring_interface/mi.h \
     myheader.h \
+    mytable.h \
     mytablemodel.h \
     recent.h \
     rowdata.h \
     tableparams.h \
-    mytable.h
 
 SOURCES += \
-#    excel.cpp \
-    excelax.cpp \
     main.cpp \
     mainwindow.cpp \
-#    measuring_interface/Aspt5/adccfg.cpp \
-#    measuring_interface/Aspt5/aspt.cpp \
-#    measuring_interface/Aspt5/global.cpp \
     measuring_interface/Upn/myprotocol.cpp \
     measuring_interface/Upn/upn.cpp \
     measuring_interface/measure.cpp \
     measuring_interface/mi.cpp \
     myheader.cpp \
+    mytable.cpp \
     mytablemodel.cpp \
     recent.cpp \
     rowdata.cpp \
-    mytable.cpp
-
-
 

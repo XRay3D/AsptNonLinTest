@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
+
 
 #include <QDateTimeEdit>
 #include <QEvent>
@@ -128,4 +128,4 @@ private:
     void openRecentFile();
 };
 
-#endif // MAINWINDOW_H
+

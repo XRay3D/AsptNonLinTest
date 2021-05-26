@@ -8,13 +8,11 @@ class PortControl {
 public:
     PortControl(Upn* upn)
         : m_upn(upn)
-        , m_semaphore(&upn->m_semaphore)
-    {
+        , m_semaphore(&upn->m_semaphore) {
         //            emit m_upn->Open(QSerialPort::ReadWrite);
         //            m_semaphore->tryAcquire(1, 1000);
     }
-    ~PortControl()
-    {
+    ~PortControl() {
         //            emit m_upn->Close();
         //            m_semaphore->tryAcquire(1, 1000);
     }
@@ -55,8 +53,7 @@ enum COMMAND {
 
 Upn::Upn(QObject* parent)
     : QObject(parent)
-    , m_resistors({ 150.0, 150.0, 300.0, 0.0, 0.0, 1.0 })
-{
+    , m_resistors({150.0, 150.0, 300.0, 0.0, 0.0, 1.0}) {
     m_port = new UpnPort(this);
     m_port->moveToThread(&m_portThread);
 
@@ -69,37 +66,35 @@ Upn::Upn(QObject* parent)
     m_portThread.start(QThread::NormalPriority);
 }
 
-Upn::~Upn()
-{
+Upn::~Upn() {
     m_portThread.quit();
     m_portThread.wait();
 }
 
-bool Upn::Ping(const QString& PortName)
-{
+bool Upn::ping(const QString& PortName, int, int) {
     QMutexLocker Locker(&m_mutex);
     m_connected = false;
     m_semaphore.acquire(m_semaphore.available());
     do {
         emit Close();
-        if (!m_semaphore.tryAcquire(1, 1000))
+        if(!m_semaphore.tryAcquire(1, 1000))
             break;
 
-        if (!PortName.isEmpty())
+        if(!PortName.isEmpty())
             m_port->setPortName(PortName);
 
         PortControl control(this);
 
         emit Open(QSerialPort::ReadWrite);
-        if (!m_semaphore.tryAcquire(1, 1000))
+        if(!m_semaphore.tryAcquire(1, 1000))
             break;
 
         emit Write(Parcel(PING));
-        if (!m_semaphore.tryAcquire(1, 100))
+        if(!m_semaphore.tryAcquire(1, 100))
             break;
 
         return m_connected = true;
-    } while (0);
+    } while(0);
 
     emit Close();
     m_semaphore.tryAcquire(1, 1000);
@@ -107,150 +102,135 @@ bool Upn::Ping(const QString& PortName)
     return m_connected;
 }
 
-bool Upn::close()
-{
+void Upn::close() {
     m_semaphore.acquire(m_semaphore.available());
     emit Close();
-    return m_semaphore.tryAcquire(1, 1000);
+    m_semaphore.tryAcquire(1, 1000);
 }
 
-bool Upn::setResistor(int r)
-{
+bool Upn::setResistor(int r) {
     QMutexLocker Locker(&m_mutex);
     PortControl control(this);
-    const quint8 m_relay[] = { Rl1, Rl2, Rl3, Rl4, Rl5, Rl6 };
+    const quint8 m_relay[] = {Rl1, Rl2, Rl3, Rl4, Rl5, Rl6};
     do {
-        if (!IsConnected())
+        if(!isConnected())
             break;
         emit Write(Parcel<quint8>(SET_RESISTOR, m_relay[r]));
-        if (m_semaphore.tryAcquire(1, 10000))
+        if(m_semaphore.tryAcquire(1, 10000))
             m_result = true;
-    } while (0);
+    } while(0);
     return m_result;
 }
 
-bool Upn::writeResistorValue(const QVector<double>& r)
-{
+bool Upn::writeResistorValue(const QVector<double>& r) {
     QMutexLocker Locker(&m_mutex);
     PortControl control(this);
     do {
-        if (!IsConnected())
+        if(!isConnected())
             break;
-        for (quint8 i = 0; i < 6; ++i) {
-            WriteResistor_t t = { i, r[i] };
+        for(quint8 i = 0; i < 6; ++i) {
+            WriteResistor_t t = {i, r[i]};
             emit Write(Parcel<WriteResistor_t>(WRITE_RESISTOR_VALUE, t));
-            if (!m_semaphore.tryAcquire(1, 1000))
+            if(!m_semaphore.tryAcquire(1, 1000))
                 return m_result;
         }
         emit Write(Parcel<quint8>(WRITE_RESISTOR_VALUE, 6));
-        if (!m_semaphore.tryAcquire(1, 1000))
+        if(!m_semaphore.tryAcquire(1, 1000))
             break;
         m_resistors = r;
         m_result = true;
-    } while (0);
+    } while(0);
 
     return m_result;
 }
 
-bool Upn::readResistorValue()
-{
+bool Upn::readResistorValue() {
     QMutexLocker Locker(&m_mutex);
     PortControl control(this);
     do {
-        if (!IsConnected())
+        if(!isConnected())
             break;
-        for (quint8 r = 0; r < 6; ++r) {
+        for(quint8 r = 0; r < 6; ++r) {
             emit Write(Parcel<quint8>(READ_RESISTOR_VALUE, r));
-            if (!m_semaphore.tryAcquire(1, 1000))
+            if(!m_semaphore.tryAcquire(1, 1000))
                 break;
             m_resistors[r] = *reinterpret_cast<double*>(&m_data.data()[3]);
         }
         m_result = true;
-    } while (0);
+    } while(0);
     return m_result;
 }
 
-QVector<double> Upn::resistors() const
-{
+QVector<double> Upn::resistors() const {
     return m_resistors;
 }
 
-void Upn::RxPing(const QByteArray& data)
-{
-    if (DBG)
+void Upn::RxPing(const QByteArray& data) {
+    if(DBG)
         qDebug() << "RxPing" << data.toHex().toUpper();
     Q_UNUSED(data)
     m_semaphore.release();
 }
 
-void Upn::RxSetResistor(const QByteArray& data)
-{
-    if (DBG)
+void Upn::RxSetResistor(const QByteArray& data) {
+    if(DBG)
         qDebug() << "RxSetResistor" << data.toHex().toUpper();
     Q_UNUSED(data)
     m_semaphore.release();
 }
 
-void Upn::RxWriteResistorValue(const QByteArray& data)
-{
-    if (DBG)
+void Upn::RxWriteResistorValue(const QByteArray& data) {
+    if(DBG)
         qDebug() << "RxWriteResistorValue" << data.toHex().toUpper();
     Q_UNUSED(data)
     m_semaphore.release();
 }
 
-void Upn::RxReadResistorValue(const QByteArray& data)
-{
-    if (DBG)
+void Upn::RxReadResistorValue(const QByteArray& data) {
+    if(DBG)
         qDebug() << "RxReadResistorValue" << data.toHex().toUpper();
     Q_UNUSED(data)
     m_semaphore.release();
 }
 
-void Upn::RxBufferOverflow(const QByteArray& data)
-{
-    if (DBG)
+void Upn::RxBufferOverflow(const QByteArray& data) {
+    if(DBG)
         qDebug() << "BUFFER_OVERFLOW" << data.toHex().toUpper();
     else
         Q_UNUSED(data)
     //m_semaphore.release();
 }
 
-void Upn::RxWrongCommand(const QByteArray& data)
-{
-    if (DBG)
+void Upn::RxWrongCommand(const QByteArray& data) {
+    if(DBG)
         qDebug() << "WRONG_COMMAND" << data.toHex().toUpper();
     else
         Q_UNUSED(data)
     //m_semaphore.release();
 }
 
-void Upn::RxTextualParcel(const QByteArray& data)
-{
-    if (DBG)
+void Upn::RxTextualParcel(const QByteArray& data) {
+    if(DBG)
         qDebug() << "TEXTUAL_PARCEL" << data.toHex().toUpper();
     else
         Q_UNUSED(data)
     //m_semaphore.release();
 }
 
-void Upn::RxCrcError(const QByteArray& data)
-{
-    if (DBG)
+void Upn::RxCrcError(const QByteArray& data) {
+    if(DBG)
         qDebug() << "CRC_ERROR" << data.toHex().toUpper();
     else
         Q_UNUSED(data)
     //m_semaphore.release();
 }
 
-void Upn::RxNullFunction(const QByteArray& data)
-{
+void Upn::RxNullFunction(const QByteArray& data) {
     m_data = data;
     m_semaphore.release();
 }
 
-bool Upn::IsConnected() const
-{
+bool Upn::isConnected() const {
     m_semaphore.acquire(m_semaphore.available());
     m_result = false;
     return m_connected;
@@ -262,8 +242,7 @@ bool Upn::IsConnected() const
 ///
 UpnPort::UpnPort(Upn* upn)
     : m_func(0x100, &Upn::RxNullFunction)
-    , m_upn(upn)
-{
+    , m_upn(upn) {
     m_func[/*PING*/ 0x37] = &Upn::RxPing;
     m_func[/*SET_RESISTOR*/ Rl1] = &Upn::RxSetResistor;
     m_func[/*SET_RESISTOR*/ Rl2] = &Upn::RxSetResistor;
@@ -284,37 +263,33 @@ UpnPort::UpnPort(Upn* upn)
     connect(this, &QSerialPort::readyRead, this, &UpnPort::ReadyRead);
 }
 
-void UpnPort::Close()
-{
+void UpnPort::Close() {
     close();
     m_upn->m_semaphore.release();
 }
 
-void UpnPort::Open(int mode)
-{
-    if (open(static_cast<QIODevice::OpenMode>(mode)))
+void UpnPort::Open(int mode) {
+    if(open(static_cast<QIODevice::OpenMode>(mode)))
         m_upn->m_semaphore.release();
 }
 
-void UpnPort::Write(const QByteArray& data)
-{
+void UpnPort::Write(const QByteArray& data) {
     qDebug() << "Write" << data.toHex().toUpper();
     write(data);
 }
 
-void UpnPort::ReadyRead()
-{
+void UpnPort::ReadyRead() {
     QMutexLocker Locker(&m_mutex);
     m_data.append(readAll());
 
     qDebug() << "ReadyRead" << m_data.toHex().toUpper();
 
-    for (int i = 0; i < m_data.size() - 3; ++i) {
+    for(int i = 0; i < m_data.size() - 3; ++i) {
         const Parcel_tp* p = reinterpret_cast<const Parcel_tp*>(m_data.constData() + i);
-        if (p->Start == ReceiveStartPattern) {
-            if (p->Size <= m_data.size()) {
+        if(p->Start == ReceiveStartPattern) {
+            if(p->Size <= m_data.size()) {
                 QByteArray tmp = m_data.mid(i, p->Size);
-                if (CheckData(tmp))
+                if(CheckData(tmp))
                     (m_upn->*m_func[p->Command])(tmp);
                 else
                     (m_upn->*m_func[CRC_ERROR])(tmp);
@@ -324,3 +299,5 @@ void UpnPort::ReadyRead()
         }
     }
 }
+
+void Upn::open(int mode) { }

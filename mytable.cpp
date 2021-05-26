@@ -62,7 +62,7 @@ void MyTable::loadFile(const QString& fileName)
         resizeRowsToContents();
         return;
     }
-    ExcelAx::loadFile(fileName, m_model);
+    MyExcel::loadFile(fileName, m_model);
     resizeRowsToContents();
 }
 
@@ -70,7 +70,7 @@ void MyTable::saveFile(const QString& fileName, const QString& asptNum, const QS
 {
     qDebug() << "SaveFile" << fileName << asptNum << fio;
     saveFile(fileName);
-    ExcelAx::saveFile(fileName, asptNum, fio, m_model);
+    MyExcel::saveFile(fileName, asptNum, fio, m_model);
 }
 
 void MyTable::saveFile(const QString& fileName)
@@ -88,7 +88,7 @@ void MyTable::printFile(const QString& fileName)
 {
     qDebug() << "PrintFile" << fileName;
 
-    ExcelAx::printFile(fileName);
+    MyExcel::printFile(fileName);
 }
 
 MyTableModel* MyTable::model() const { return m_model; }

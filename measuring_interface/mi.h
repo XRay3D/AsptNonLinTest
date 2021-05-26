@@ -1,5 +1,4 @@
-#ifndef MEASURINGINTERFACE_H
-#define MEASURINGINTERFACE_H
+#pragma once
 
 #include "Upn/upn.h"
 #include "aspt.h"
@@ -7,12 +6,16 @@
 #include <QObject>
 
 class MI {
+    static inline Aspt* m_aspt;
+    static inline Measure* m_measure;
+    static inline Upn* m_upn;
+    static inline QThread thread;
+    static inline QSemaphore semafore;
+
 public:
     MI();
     ~MI();
-    static Aspt* aspt;
-    static Measure* measure;
-    static Upn* upn;
+    static Aspt* aspt() { return m_aspt; }
+    static Measure* measure() { return m_measure; }
+    static Upn* upn() { return m_upn; }
 };
-
-#endif // MEASURINGINTERFACE_H

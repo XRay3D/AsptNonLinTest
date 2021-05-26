@@ -10,26 +10,31 @@ MainWindow::MainWindow(QWidget* parent)
     , ui(new Ui::MainWindow)
     , Start(QStringLiteral(":/res/image2.png") /*QIcon::fromTheme("draw-triangle2")*/)
     , Stop(QStringLiteral(":/res/image3.png") /*QIcon::fromTheme("draw-rectangle")*/)
-    , recentFiles(this, "proto")
-{
+    , recentFiles(this, "proto") {
     ui->setupUi(this);
 
     auto setupChart = [&](QChartView* chartView, const QString& name) {
         QChart* chart = new QChart();
-        chart->setTitle(name);
         QLineSeries* s;
+
         s = new QLineSeries(chart);
         s->setName("Подканал 0");
         chart->addSeries(s);
         series.append(s);
+
         s = new QLineSeries(chart);
         s->setName("Подканал 1");
         chart->addSeries(s);
         series.append(s);
+
+        chart->setTitle(name);
         chart->legend()->setAlignment(Qt::AlignRight);
         chart->setMargins(QMargins(0, 0, 0, 0));
         chart->createDefaultAxes();
         chart->setTheme(QChart::ChartThemeDark);
+        chart->layout()->setContentsMargins(0, 0, 0, 0);
+        chart->setBackgroundRoundness(0);
+
         chartView->setChart(chart);
         chartView->setRenderHints(QPainter::Antialiasing);
         chartView->setBackgroundBrush(Qt::white);
@@ -44,38 +49,35 @@ MainWindow::MainWindow(QWidget* parent)
     ui->tabWidget->setCurrentIndex(0);
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     emit stopWork(3);
     delete ui;
 }
 
-void MainWindow::closeEvent(QCloseEvent* event)
-{
+void MainWindow::closeEvent(QCloseEvent* event) {
     writeSettings();
     event->accept();
 }
 
-void MainWindow::handleDeviceFound(eDevice dev, const QString& portName, double num)
-{
-    switch (dev) {
+void MainWindow::handleDeviceFound(eDevice dev, const QString& portName, double num) {
+    switch(dev) {
     case DeviceAspt:
         ui->cbxAspt->addItem(portName, int(num));
         break;
     case DeviceUpt:
-        ui->cbxUpn->addItem(portName, QVariant::fromValue(MI::upn->resistors()));
+        ui->cbxUpn->addItem(portName, QVariant::fromValue(MI::upn()->resistors()));
         ui->tab_3->setEnabled(true);
         break;
     case DeviceProgres:
         progressBar.setValue(progressBar.value() + 1);
         break;
     case DeviceStopSearch:
-        if (ui->cbxUpn->count())
-            MI::upn->Ping(ui->cbxUpn->currentText());
-        if (ui->cbxAspt->count())
-            MI::aspt->Ping(ui->cbxAspt->currentText());
+        if(ui->cbxUpn->count())
+            MI::upn()->ping(ui->cbxUpn->currentText());
+        if(ui->cbxAspt->count())
+            MI::aspt()->ping(ui->cbxAspt->currentText());
 
-        if (ui->cbxAspt->count() && ui->cbxUpn->count())
+        if(ui->cbxAspt->count() && ui->cbxUpn->count())
             ui->pbStartStop->setEnabled(true);
         else
             ui->pbStartStop->setEnabled(false);
@@ -86,16 +88,15 @@ void MainWindow::handleDeviceFound(eDevice dev, const QString& portName, double 
     }
 }
 
-void MainWindow::handleMessage(eMessageType msgType, int row)
-{
+void MainWindow::handleMessage(eMessageType msgType, int row) {
     int count = (ui->sbxMeasNum->value() + ui->sbxSkipMeasNum->value()) * 6;
-    switch (msgType) {
+    switch(msgType) {
     case ConnectUptToAspt:
-        if (!curFile.isEmpty())
+        if(!curFile.isEmpty())
             saveFile(curFile);
         taskbarProgress->pause();
         ui->table->showRow(row);
-        if (QMessageBox::information(this, ui->leAsptSerNum->text(), QString(tr("Воткни УПН №%1 в канал %2 АСПТ")).arg(ui->leUpnSerNum->text()).arg(row + 1), "Продолжить", "Остановить проверку", 0, 0) == 1) {
+        if(QMessageBox::information(this, ui->leAsptSerNum->text(), QString(tr("Воткни УПН №%1 в канал %2 АСПТ")).arg(ui->leUpnSerNum->text()).arg(row + 1), "Продолжить", "Остановить проверку", 0, 0) == 1) {
             emit stopWork();
         } else {
             ui->table->model()->clearData(row);
@@ -130,13 +131,12 @@ void MainWindow::handleMessage(eMessageType msgType, int row)
     }
 }
 
-void MainWindow::handleMeasure(const double value, int ch, int r)
-{
+void MainWindow::handleMeasure(const double value, int ch, int r) {
     progressBar.setValue(progressBar.value() + 1);
     elapsedMs += elapsedTimer.restart();
     int ms = 0;
-    for (QPair<int, int>& var : channels) {
-        if (var.first < ch)
+    for(QPair<int, int>& var : channels) {
+        if(var.first < ch)
             ++ms;
     }
     ms = (ms * progressBar.maximum()) + progressBar.value();
@@ -145,17 +145,16 @@ void MainWindow::handleMeasure(const double value, int ch, int r)
     ui->table->model()->addData(ch, r, value);
 }
 
-void MainWindow::updatePlot(int chNum)
-{
+void MainWindow::updatePlot(int chNum) {
     auto updateChart = [&](const QVector<int> n, QChartView* graphicsView) {
         QVector<double> y1(ui->table->model()->getData(chNum, n[0]));
         QVector<double> y2(ui->table->model()->getData(chNum, n[1]));
         series[n[2]]->clear();
         series[n[3]]->clear();
-        if (y1.size() > 1 || y2.size() > 1) {
-            for (int x = 0, end = y1.size(); x < end; ++x)
+        if(y1.size() > 1 || y2.size() > 1) {
+            for(int x = 0, end = y1.size(); x < end; ++x)
                 series[n[2]]->append(x + 1, y1[x]);
-            for (int x = 0, end = y2.size(); x < end; ++x)
+            for(int x = 0, end = y2.size(); x < end; ++x)
                 series[n[3]]->append(x + 1, y2[x]);
             graphicsView->chart()->axes(Qt::Horizontal).first()->setRange(1, qMax(y1.size(), y2.size())); /*axisX*/
             y1.append(y2);
@@ -168,14 +167,13 @@ void MainWindow::updatePlot(int chNum)
         }
     };
 
-    updateChart({ 0, 3, 0, 1 }, ui->graphicsView_1);
-    updateChart({ 1, 4, 2, 3 }, ui->graphicsView_2);
-    updateChart({ 2, 5, 4, 5 }, ui->graphicsView_3);
+    updateChart({0, 3, 0, 1}, ui->graphicsView_1);
+    updateChart({1, 4, 2, 3}, ui->graphicsView_2);
+    updateChart({2, 5, 4, 5}, ui->graphicsView_3);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void MainWindow::readSettings()
-{
+void MainWindow::readSettings() {
     QSettings settings("AsptNonLinTest.ini", QSettings::IniFormat);
     settings.beginGroup("MainWindow");
     restoreGeometry(settings.value("geometry").toByteArray());
@@ -192,8 +190,7 @@ void MainWindow::readSettings()
     settings.endGroup();
 }
 
-void MainWindow::writeSettings()
-{
+void MainWindow::writeSettings() {
     QSettings settings("AsptNonLinTest.ini", QSettings::IniFormat);
     settings.beginGroup("MainWindow");
     settings.setValue("geometry", saveGeometry());
@@ -209,53 +206,46 @@ void MainWindow::writeSettings()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::newFile()
-{
+void MainWindow::newFile() {
     MainWindow* other = new MainWindow;
     other->show();
 }
 
-void MainWindow::open()
-{
+void MainWindow::open() {
     QString fileName = QFileDialog::getOpenFileName(
         this, "Открыть файл", lastPath, "Image Files (*.xls *.xlsx)");
-    if (!fileName.isEmpty())
+    if(!fileName.isEmpty())
         loadFile(fileName);
 }
 
-void MainWindow::save()
-{
-    if (curFile.isEmpty())
+void MainWindow::save() {
+    if(curFile.isEmpty())
         saveAs();
     else
         saveFile(curFile);
 }
 
-void MainWindow::saveAs()
-{
+void MainWindow::saveAs() {
     QString fileName = QFileDialog::getSaveFileName(this, "Сохранить файл", lastPath + "/" + ui->leAsptSerNum->text() + QDate::currentDate().toString(" от dd.MM.yyyy г.xlsx"), "(*.xls *.xlsx)");
-    if (fileName.isEmpty())
+    if(fileName.isEmpty())
         return;
     saveFile(fileName);
 }
 
-void MainWindow::print()
-{
-    if (!curFile.isEmpty()) {
+void MainWindow::print() {
+    if(!curFile.isEmpty()) {
         ui->table->saveFile(curFile, ui->leAsptSerNum->text(), ui->leFio->text());
         ui->table->printFile(curFile);
     }
 }
 
-void MainWindow::openRecentFile()
-{
+void MainWindow::openRecentFile() {
     QAction* action = qobject_cast<QAction*>(sender());
-    if (action)
+    if(action)
         loadFile(action->data().toString());
 }
 
-void MainWindow::createActions()
-{
+void MainWindow::createActions() {
     openAct = new QAction(tr("&Открыть..."), this);
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Открыть существующий файл"));
@@ -286,8 +276,7 @@ void MainWindow::createActions()
     connect(aboutQtAct, &QAction::triggered, qApp, &QApplication::aboutQt);
 }
 
-void MainWindow::createMenus()
-{
+void MainWindow::createMenus() {
     fileMenu = menuBar()->addMenu(tr("&Файл"));
     // fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
@@ -310,10 +299,9 @@ void MainWindow::createMenus()
     connect(fileMenu, &QMenu::aboutToShow, [this] { printAct->setEnabled(QFileInfo::exists(curFile)); });
 }
 
-void MainWindow::loadFile(const QString& fileName)
-{
+void MainWindow::loadFile(const QString& fileName) {
     QFile file(fileName);
-    if (!file.exists()) {
+    if(!file.exists()) {
         QMessageBox::warning(this, tr("Недавние файлы"), tr("Не удается прочитать файл %1:\n%2.").arg(fileName).arg(file.errorString()), "TT");
         return;
     }
@@ -324,8 +312,7 @@ void MainWindow::loadFile(const QString& fileName)
     statusBar()->showMessage(tr("Файл загружен"), 2000);
 }
 
-void MainWindow::saveFile(const QString& fileName)
-{
+void MainWindow::saveFile(const QString& fileName) {
     QApplication::setOverrideCursor(Qt::WaitCursor);
     ui->table->saveFile(fileName, ui->leAsptSerNum->text(), ui->leFio->text());
     QApplication::restoreOverrideCursor();
@@ -333,8 +320,7 @@ void MainWindow::saveFile(const QString& fileName)
     statusBar()->showMessage(tr("Файл сохранен"), 2000);
 }
 
-void MainWindow::setCurrentFile(const QString& fileName)
-{
+void MainWindow::setCurrentFile(const QString& fileName) {
     curFile = fileName;
     lastPath = QFileInfo(curFile).path();
     setWindowTitle(QFileInfo(curFile).fileName());
@@ -343,14 +329,13 @@ void MainWindow::setCurrentFile(const QString& fileName)
 
 QString MainWindow::strippedName(const QString& fullFileName) { return QFileInfo(fullFileName).fileName(); }
 
-void MainWindow::on_pbUpnRead_clicked()
-{
-    MI::upn->Ping(ui->cbxUpn->currentText());
-    if (MI::upn->readResistorValue()) {
-        ui->dsbxUpnR1->setValue(MI::upn->resistors()[0]);
-        ui->dsbxUpnR2->setValue(MI::upn->resistors()[1]);
-        ui->dsbxUpnR3->setValue(MI::upn->resistors()[2]);
-        ui->sbxUpnSerNum->setValue(static_cast<int>(MI::upn->resistors()[5]));
+void MainWindow::on_pbUpnRead_clicked() {
+    MI::upn()->ping(ui->cbxUpn->currentText());
+    if(MI::upn()->readResistorValue()) {
+        ui->dsbxUpnR1->setValue(MI::upn()->resistors()[0]);
+        ui->dsbxUpnR2->setValue(MI::upn()->resistors()[1]);
+        ui->dsbxUpnR3->setValue(MI::upn()->resistors()[2]);
+        ui->sbxUpnSerNum->setValue(static_cast<int>(MI::upn()->resistors()[5]));
         QMessageBox::information(
             this, tr("УПН"), tr("Значения из УПН успешно считаны!"), "Хоошо :-)");
     } else {
@@ -358,19 +343,18 @@ void MainWindow::on_pbUpnRead_clicked()
     }
 }
 
-void MainWindow::on_pbUpnWrite_clicked()
-{
-    MI::upn->Ping(ui->cbxUpn->currentText());
-    if (QMessageBox::question(this, tr("УПН"), tr("Вы действительно хотите записать новые значения в УПН?"), "Да", "Нет", "", 1, 1) == 0) {
-        if (MI::upn->writeResistorValue(
-                { ui->dsbxUpnR1->value(),
-                    ui->dsbxUpnR2->value(),
-                    ui->dsbxUpnR3->value(),
-                    0.0,
-                    0.0,
-                    double(ui->sbxUpnSerNum->value()) })) {
+void MainWindow::on_pbUpnWrite_clicked() {
+    MI::upn()->ping(ui->cbxUpn->currentText());
+    if(QMessageBox::question(this, tr("УПН"), tr("Вы действительно хотите записать новые значения в УПН?"), "Да", "Нет", "", 1, 1) == 0) {
+        if(MI::upn()->writeResistorValue(
+               {ui->dsbxUpnR1->value(),
+                ui->dsbxUpnR2->value(),
+                ui->dsbxUpnR3->value(),
+                0.0,
+                0.0,
+                double(ui->sbxUpnSerNum->value())})) {
             QMessageBox::information(this, tr("УПН"), tr("Новые значения в УПН успешно записаны!"), "Хоошо :-)");
-            ui->cbxUpn->setItemData(ui->cbxUpn->currentIndex(), QVariant::fromValue(MI::upn->resistors()));
+            ui->cbxUpn->setItemData(ui->cbxUpn->currentIndex(), QVariant::fromValue(MI::upn()->resistors()));
             //            ui->table->model()->setResistorsValue(ui->cbxUpn->currentData().value<QVector<double>>());
             ui->leUpnSerNum->setText(ui->sbxUpnSerNum->text());
         } else {
@@ -379,11 +363,10 @@ void MainWindow::on_pbUpnWrite_clicked()
     }
 }
 
-void MainWindow::setProgressVisible(bool fl)
-{
+void MainWindow::setProgressVisible(bool fl) {
     progressBar.setVisible(fl);
     lbRemainingTime.setVisible(fl);
-    if (fl) {
+    if(fl) {
         taskbarProgress->show();
         progressBar.setValue(0);
         lbRemainingTime.setText("Осталось: ?");
@@ -391,15 +374,14 @@ void MainWindow::setProgressVisible(bool fl)
         taskbarProgress->hide();
 }
 
-void MainWindow::currentIndexChanged(int index)
-{
+void MainWindow::currentIndexChanged(int index) {
     index = ui->cbxAspt->itemData(ui->cbxAspt->currentIndex()).toInt();
-    if (index > 0)
+    if(index > 0)
         ui->leAsptSerNum->setText(QString("%1").arg(index).insert(2, '-'));
     else
         ui->leAsptSerNum->clear();
     QVector<double> r(ui->cbxUpn->currentData().value<QVector<double>>());
-    if (r.size() == 6) {
+    if(r.size() == 6) {
         ui->leUpnSerNum->setText(QString("%1").arg(r[5]));
         ui->dsbxUpnR1->setValue(r[0]);
         ui->dsbxUpnR2->setValue(r[1]);
@@ -417,16 +399,15 @@ void MainWindow::currentIndexChanged(int index)
     }
 }
 
-void MainWindow::connectObjects()
-{
+void MainWindow::connectObjects() {
     /***************** Thread *****************/
-    connect(this, &MainWindow::goMeasure, MI::measure, &Measure::measure);
-    connect(this, &MainWindow::goFindDevices, MI::measure, &Measure::searchDevices);
-    connect(this, &MainWindow::stopWork, MI::measure, &Measure::stopWork);
+    connect(this, &MainWindow::goMeasure, MI::measure(), &Measure::measure);
+    connect(this, &MainWindow::goFindDevices, MI::measure(), &Measure::searchDevices);
+    connect(this, &MainWindow::stopWork, MI::measure(), &Measure::stopWork);
 
-    connect(MI::measure, &Measure::deviceFound, this, &MainWindow::handleDeviceFound);
-    connect(MI::measure, &Measure::measureReady, this, &MainWindow::handleMeasure);
-    connect(MI::measure, &Measure::doMessage, this, &MainWindow::handleMessage);
+    connect(MI::measure(), &Measure::deviceFound, this, &MainWindow::handleDeviceFound);
+    connect(MI::measure(), &Measure::measureReady, this, &MainWindow::handleMeasure);
+    connect(MI::measure(), &Measure::doMessage, this, &MainWindow::handleMessage);
 
     /***************** table->model() *****************/
     connect(ui->table, &MyTable::updatePlot, ui->cbxPlot, &QComboBox::setCurrentIndex);
@@ -439,10 +420,10 @@ void MainWindow::connectObjects()
 
     connect(ui->cbxAspt, qOverload<int>(&QComboBox::currentIndexChanged), this, &MainWindow::currentIndexChanged);
     connect(ui->cbxUpn, qOverload<int>(&QComboBox::currentIndexChanged), this, &MainWindow::currentIndexChanged);
-    connect(ui->cbxUpn, qOverload<const QString&>(&QComboBox::currentIndexChanged), MI::upn, &Upn::Ping);
+    connect(ui->cbxUpn, qOverload<const QString&>(&QComboBox::currentIndexChanged), [](const QString& portName) { MI::upn()->ping(portName); });
 
     connect(ui->pbFindDevices, &QPushButton::clicked, [=](bool checked) {
-        if (checked) {
+        if(checked) {
             //            disconnect(ui->cbxAspt, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::currentIndexChanged);
             //            disconnect(ui->cbxUpn, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::currentIndexChanged);
             ui->cbxAspt->clear();
@@ -466,7 +447,7 @@ void MainWindow::connectObjects()
 
     ui->tab_3->setEnabled(false);
 
-    connect(this, &MainWindow::setResistor, MI::upn, &Upn::setResistor);
+    connect(this, &MainWindow::setResistor, MI::upn(), &Upn::setResistor);
     connect(ui->pbUpnR1Ch0, &QPushButton::clicked, [this] { setResistor(0); });
     connect(ui->pbUpnR2Ch0, &QPushButton::clicked, [this] { setResistor(1); });
     connect(ui->pbUpnR3Ch0, &QPushButton::clicked, [this] { setResistor(2); });
@@ -475,31 +456,31 @@ void MainWindow::connectObjects()
     connect(ui->pbUpnR3Ch1, &QPushButton::clicked, [this] { setResistor(5); });
 
     connect(ui->dsbxMin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [&](double arg1) {
-        if (ui->dsbxMax->value() < arg1)
+        if(ui->dsbxMax->value() < arg1)
             ui->dsbxMax->setValue(arg1);
         ui->table->model()->setMin(arg1);
     });
 
     connect(ui->dsbxMax, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [&](double arg1) {
-        if (ui->dsbxMin->value() > arg1)
+        if(ui->dsbxMin->value() > arg1)
             ui->dsbxMin->setValue(arg1);
         ui->table->model()->setMax(arg1);
     });
     //    connect(ui->leFio, &QLineEdit::textChanged, [this](const QString& text) { ui->pbStartStop->setEnabled(text == "skip"); });
     connect(ui->pbStartStop, &QPushButton::clicked, [=](bool checked) {
-        if (checked) {
+        if(checked) {
             channels.clear();
-            for (int row = 0; row < 16; ++row) {
-                if (ui->table->checkedRows()[row])
+            for(int row = 0; row < 16; ++row) {
+                if(ui->table->checkedRows()[row])
                     channels.append(qMakePair(int(row), int(3)));
             }
-            if (channels.isEmpty()) {
+            if(channels.isEmpty()) {
                 QMessageBox::warning(this, ui->leAsptSerNum->text(), tr("Не выбран ни один канал для измерения!"), tr("Хорошо"));
                 ui->pbStartStop->setChecked(false);
                 return;
             }
-            MI::aspt->Ping(ui->cbxAspt->currentText());
-            MI::upn->Ping(ui->cbxUpn->currentText());
+            MI::aspt()->ping(ui->cbxAspt->currentText());
+            MI::upn()->ping(ui->cbxUpn->currentText());
             ui->pbStartStop->setIcon(Stop);
             ui->pbStartStop->setText(tr("Закончить проверку"));
             setProgressVisible(true);

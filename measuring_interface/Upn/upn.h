@@ -1,7 +1,7 @@
-#ifndef MY_PROTOCOL_H
-#define MY_PROTOCOL_H
+#pragma once
 
-#include "../common_interfaces.h"
+
+#include "commoninterfaces.h"
 #include "myprotocol.h"
 #include <QMutex>
 #include <QObject>
@@ -42,9 +42,11 @@ public:
     ~Upn();
 
     // CommonInterfaces interface
-    bool IsConnected() const override;
-    bool Ping(const QString& PortName = QString()) override;
-    bool close();
+    bool isConnected() const override;
+    bool ping(const QString& PortName = QString(), int = {}, int = {}) override;
+    void close() override;
+    void open(int mode) override;
+
     bool setResistor(int r);
     bool writeResistorValue(const QVector<double>& r);
     bool readResistorValue();
@@ -96,4 +98,4 @@ private:
     void ReadyRead();
 };
 
-#endif // MY_PROTOCOL_H
+

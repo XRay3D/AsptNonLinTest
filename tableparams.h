@@ -1,5 +1,5 @@
-#ifndef TABLEPARAMS_H
-#define TABLEPARAMS_H
+#pragma once
+
 
 enum ColumnType {
     SignalCh0,
@@ -17,4 +17,4 @@ enum {
     ColumnCount = MeasureCh1 + 1
 };
 
-#endif // TABLEPARAMS_H
+

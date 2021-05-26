@@ -1,5 +1,5 @@
-#ifndef MYPROTOCOL_H
-#define MYPROTOCOL_H
+#pragma once
+
 
 #include <QByteArray>
 #include <QDebug>
@@ -54,4 +54,4 @@ public:
     quint8 CalcCrc(const QByteArray& data);
 };
 
-#endif // MYPROTOCOL_H
+
