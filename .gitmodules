@@ -1,0 +1,6 @@
+[submodule "CommonInterfaces"]
+	path = CommonInterfaces
+	url = git@github.com:XRay3D/CommonInterfaces.git
+[submodule "MyProtokol"]
+	path = MyProtokol
+	url = git@github.com:XRay3D/MyProtokol.git
