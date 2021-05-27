@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <QHeaderView>
 
 class MyHeader : public QHeaderView {
@@ -11,7 +10,7 @@ public:
     MyHeader(Qt::Orientation orientation, QWidget* parent = nullptr);
     ~MyHeader();
 
-    void setChecked(bool checked);
+    void setChecked(Qt::CheckState checkState);
 
     // QWidget interface
 protected:
@@ -21,10 +20,12 @@ protected:
     QSize sizeHint() const override;
 
 signals:
-    void checkedChanged(const QVector<bool>&, int);
+    void checkedChanged(const std::vector<Qt::CheckState>&, Qt::Orientation);
 
 private:
-    QVector<bool> m_checked;
+    std::vector<Qt::CheckState> m_checked;
+    void togle(Qt::CheckState& state)
+    {
+        state = state == Qt::Checked ? Qt::Unchecked : Qt::Checked;
+    }
 };
-
-

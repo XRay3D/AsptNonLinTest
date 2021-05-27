@@ -17,12 +17,12 @@ void Recent::createMenu(QMenu* fileMenu, const QString& menuName)
     recentFileSubMenuAct = recentMenu->menuAction();
 
     for (int i = 0; i < Recent::MaxRecentFiles; ++i) {
-        recentFileActs[i] = recentMenu->addAction(QString(), this, &Recent::openRecentFile);
+        recentFileActs[i] = recentMenu->addAction(QIcon::fromTheme("x-office-spreadsheet"), QString(), this, &Recent::openRecentFile);
         recentFileActs[i]->setVisible(false);
     }
 
     recentMenu->addSeparator();
-    recentFileActs[Recent::MaxRecentFiles] = recentMenu->addAction(tr("Отчистить список"), [this] {
+    recentFileActs[Recent::MaxRecentFiles] = recentMenu->addAction(QIcon::fromTheme("list-remove"), tr("Отчистить список"), [this] {
         QSettings settings("AsptNonLinTest.ini", QSettings::IniFormat);
         writeRecentFiles({}, settings);
         updateRecentFileActions();
@@ -111,5 +111,5 @@ void Recent::updateRecentFileActions()
 void Recent::openRecentFile()
 {
     if (const QAction* action = qobject_cast<const QAction*>(sender()))
-        mainWindow->loadFile(action->data().toString());
+        mainWindow->openFile(action->data().toString());
 }

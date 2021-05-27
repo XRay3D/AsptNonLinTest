@@ -3,50 +3,18 @@
 #include <QCoreApplication>
 #include <QSerialPortInfo>
 
-const int id1 = qRegisterMetaType<eDevice>("eDevice");
 const int id2 = qRegisterMetaType<eMessageType>("eMessageType");
 const int id3 = qRegisterMetaType<QVector<QPair<int, int>>>("QVector<QPair<int, int>>");
 const int id4 = qRegisterMetaType<QVector<double>>("QVector<double>");
 
 Measure::Measure(QObject* parent)
     : QObject(parent)
-    , m_AdcCfgList{
+    , m_AdcCfgList {
         "|1|1|1|0|0|0|3|6|28|3|0|0|5|0|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|220|0|\0",
         "|1|1|1|0|0|0|3|6|28|3|0|0|5|1|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|221|0|\0"
     }
     , m_beep("beep.wav", this)
 {
-}
-
-void Measure::searchDevices()
-{
-    resetSemaphore();
-    QList<QSerialPortInfo> ports(QSerialPortInfo::availablePorts());
-    std::sort(ports.begin(), ports.end(), [](const QSerialPortInfo& a, const QSerialPortInfo& b) { return a.portName().mid(3).toInt() < b.portName().mid(3).toInt(); });
-    QElapsedTimer t;
-    for (QSerialPortInfo& portInfo : ports) {
-        if (checkStop())
-            break;
-        t.start();
-        if (MI::upn()->ping(portInfo.portName()) && MI::upn()->readResistorValue()) {
-            emit deviceFound(DeviceUpt, portInfo.portName(), MI::upn()->resistors().last());
-            MI::upn()->close();
-        }
-        qDebug() << "upn" << t.elapsed();
-
-        if (checkStop())
-            break;
-        t.start();
-        if (MI::aspt()->ping(portInfo.portName())) {
-            emit deviceFound(DeviceAspt, portInfo.portName(), MI::aspt()->serialNumber());
-            MI::aspt()->close();
-        }
-        qDebug() << "aspt" << t.elapsed();
-        emit deviceFound(DeviceProgres);
-
-        emit deviceFound(DeviceProgres);
-    }
-    emit deviceFound(DeviceStopSearch);
 }
 
 void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
@@ -78,10 +46,10 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
         double v = 0.0;
 
         for (res = 0; res < 6; ++res) {
-            if (!MI::upn()->setResistor(res)) {
-                emit doMessage(CheckUptConnection, 0);
-                return;
-            }
+            //            if (!MI::upn()->setResistor(res)) {
+            //                emit doMessage(CheckUptConnection, 0);
+            //                return;
+            //            }
             AdcCfg ADCCfg;
             if (res < 3) {
                 if (!(stage.second & 0x1)) {
@@ -152,11 +120,7 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
 
 void Measure::stopWork(int count) { m_semaphore.release(count); }
 
-bool Measure::checkStop()
-{
-    QCoreApplication::processEvents(QEventLoop::AllEvents);
-    return m_semaphore.tryAcquire();
-}
+bool Measure::checkStop() { return m_semaphore.tryAcquire(); }
 
 void Measure::resetSemaphore()
 {

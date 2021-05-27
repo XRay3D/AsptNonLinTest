@@ -27,6 +27,8 @@ public:
     void writeRecentFiles(const QStringList& files, QSettings& settings);
 
     QString fileKey();
+
+private:
     const QString recentFilesKey;
 
     QMenu* recentMenu = nullptr;

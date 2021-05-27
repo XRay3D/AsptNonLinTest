@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <QDateTimeEdit>
 #include <QEvent>
 #include <QLabel>
@@ -24,13 +23,14 @@ class QMenu;
 class QTableWidgetItem;
 class QCustomPlot;
 
+class DevFinder;
 namespace Ui {
 class MainWindow;
 }
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
-    friend Recent;
+    friend class Recent;
 
 public:
     explicit MainWindow(QWidget* parent = 0);
@@ -39,93 +39,76 @@ public:
 protected:
     void closeEvent(QCloseEvent* event);
 
+private slots:
+    void updatePlot(int chNum);
+    void on_pbUpnRead_clicked();
+    void on_pbUpnWrite_clicked();
+    void setProgressVisible(bool fl);
+    void currentIndexChanged(int index);
+
+signals:
+    void goMeasure(const QVector<QPair<int, int>>&, int);
+    void stopWork(int count = 1);
+    void setResistor(int r = 0);
+
 private:
     Ui::MainWindow* ui;
-    QIcon Start;
-    QIcon Stop;
-
-    QTimer statusBarTimer;
-    QProgressBar progressBar;
-    QLabel lbRemainingTime;
-    QDateTimeEdit timeEdit;
 
 #ifndef linux
     QWinTaskbarButton* taskbarButton;
     QWinTaskbarProgress* taskbarProgress;
 #endif
 
-    //////////////////////////////////////////////////////////////////////////////////////
-signals:
-    void goFindDevices();
-    void goMeasure(const QVector<QPair<int, int>>&, int);
-    void stopWork(int count = 1);
-    void setResistor(int r = 0);
-
-private slots:
-    //////////////////////////////////////////////////////////////////////////////////////
-    void updatePlot(int chNum);
-    void on_pbUpnRead_clicked();
-    void on_pbUpnWrite_clicked();
-    void setProgressVisible(bool fl);
-
-    void currentIndexChanged(int index);
-
-private:
-    void connectObjects();
-    //    void startStopMeasure(bool checked = false);
-    void ResistorClicked();
-    //////////////////////////////////////////////////////////////////////////////////////
-    void handleDeviceFound(eDevice dev, const QString& portName, double num);
-    void handleMessage(eMessageType i, int row);
-    void handleMeasure(const double value, int ch, int r);
-    //////////////////////////////////////////////////////////////////////////////////////
-    void readSettings();
-    void writeSettings();
-    //////////////////////////////////////////////////////////////////////////////////////
-    void tableWidgetCheckAll(bool checked);
-    void tableWidgetCleaner();
-    bool tableWidgetUpdated;
-    //////////////////////////////////////////////////////////////////////////////////////
-    void createActions();
-    void createMenus();
-    void loadFile(const QString& fileName);
-    void saveFile(const QString& fileName);
-    void setCurrentFile(const QString& fileName);
-
-    QString strippedName(const QString& fullFileName);
-
-    QString curFile;
-    QString lastPath;
+    QIcon Start;
+    QIcon Stop;
 
     Recent recentFiles;
 
-    QMenu* fileMenu;
-    //    QMenu* recentFilesMenu;
-    QMenu* helpMenu;
-    //    QAction* newAct;
-    QAction* openAct;
-    QAction* saveAct;
-    QAction* saveAsAct;
-    QAction* exitAct;
-    QAction* aboutQtAct;
-    QAction* printAct;
-
-    QVector<QLineSeries*> series;
-
+    QDateTimeEdit timeEdit;
     QElapsedTimer elapsedTimer;
-    int elapsedMs;
+    QLabel lbRemainingTime;
+    QProgressBar progressBar;
+    QString curFile;
+    QString lastPath;
+    QString messageTitle;
+    QTimer statusBarTimer;
+    QVector<QLineSeries*> series;
     QVector<QPair<int, int>> channels;
+    DevFinder* finder = nullptr;
 
-    //    enum { MaxRecentFiles = 5 };
-    //    QAction* recentFileActs[MaxRecentFiles];
-    //////////////////////////////////////////////////////////////////////////////////////
-    //private slots:
-    void newFile();
-    void open();
-    void save();
-    void saveAs();
-    void print();
-    void openRecentFile();
+    void setProgressMax(int max);
+    void setProgressVal(int val);
+
+    int elapsedMs;
+
+    void connectObjects();
+    void resistorClicked();
+    // handles
+
+    void devFinderFinished();
+    void handleMessage(eMessageType msgType, int row);
+    void handleMeasure(const double value, int ch, int r);
+    // settings
+    void loadSettings();
+    void saveSettings();
+    // table
+    void tableWidgetCheckAll(bool checked);
+    void tableWidgetCleaner();
+    bool tableWidgetUpdated;
+    // File
+    void createMenus();
+
+    void openFile(const QString& fileName);
+    void saveFile(const QString& fileName);
+    void setCurrentFile(const QString& fileName);
+    void updateRecentFileActions();
+
+    QString strippedName(const QString& fullFileName);
+
+    void onNewFileAction();
+    void onOpenAction();
+    void onSaveAction();
+    void onSaveAsAction();
+    void onPrintAction();
+    void onOpenRecentFileAction();
 };
-
-

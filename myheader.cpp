@@ -8,7 +8,7 @@
 
 MyHeader::MyHeader(Qt::Orientation orientation, QWidget* parent)
     : QHeaderView(orientation, parent)
-    , m_checked(16, false)
+    , m_checked(16, Qt::Unchecked)
 {
     QSettings settings("AsptNonLinTest.ini", QSettings::IniFormat);
     int size = settings.beginReadArray("MyHeader" + QString::number(orientation));
@@ -16,11 +16,11 @@ MyHeader::MyHeader(Qt::Orientation orientation, QWidget* parent)
         settings.setArrayIndex(i);
         key = settings.value("key").toInt();
         if (key > -1)
-            m_checked[key] = settings.value("value").toBool();
+            m_checked[key] = settings.value("value").value<Qt::CheckState>();
     }
     settings.endArray();
     //Отправить сигнал после установки всех соединений.
-    QTimer::singleShot(1, Qt::CoarseTimer, [=] { emit checkedChanged(m_checked, orientation); });
+    QTimer::singleShot(1, Qt::CoarseTimer, [this, orientation] { emit checkedChanged(m_checked, orientation); });
     if (orientation == Qt::Vertical)
         setSectionResizeMode(QHeaderView::ResizeToContents);
 }
@@ -37,10 +37,10 @@ MyHeader::~MyHeader()
     settings.endArray();
 }
 
-void MyHeader::setChecked(bool checked)
+void MyHeader::setChecked(Qt::CheckState checkState)
 {
     for (int index = 0; index < m_checked.size(); ++index) {
-        m_checked[index] = checked;
+        m_checked[index] = checkState;
         updateSection(index);
     }
     emit checkedChanged(m_checked, orientation());
@@ -56,7 +56,7 @@ void MyHeader::mouseMoveEvent(QMouseEvent* event)
         if (index < 0)
             return;
         if (event->buttons() & Qt::LeftButton) {
-            m_checked[index] = !m_checked[index];
+            togle(m_checked[index]);
             updateSection(index);
             emit checkedChanged(m_checked, orientation());
         }
@@ -71,12 +71,12 @@ void MyHeader::mousePressEvent(QMouseEvent* event)
         return;
     if (orientation() == Qt::Horizontal) {
         for (int var = 0; var < count(); ++var)
-            m_checked[var] = false;
-        m_checked[index] = true;
+            m_checked[var] = Qt::Unchecked;
+        m_checked[index] = Qt::Checked;
         for (int var = 0; var < count(); ++var)
             updateSection(var);
     } else {
-        m_checked[index] = !m_checked[index];
+        togle(m_checked[index]);
         updateSection(index);
     }
 
@@ -94,7 +94,7 @@ void MyHeader::paintSection(QPainter* painter, const QRect& rect, int logicalInd
     QStyleOptionButton option;
     option.rect = QRect(rect.left() + 4, (rect.height() - 16) / 2 + rect.top(), 16, 16);
 
-    m_checked[logicalIndex] ? option.state = QStyle::State_On : option.state = QStyle::State_Off;
+    m_checked[logicalIndex] == Qt::Checked ? option.state = QStyle::State_On : option.state = QStyle::State_Off;
     option.state |= (isEnabled() ? QStyle::State_Enabled : QStyle::State_None);
     if (orientation() == Qt::Horizontal)
         style()->drawPrimitive(QStyle::PE_IndicatorRadioButton, &option, painter);
