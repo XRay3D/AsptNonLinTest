@@ -7,6 +7,8 @@ const int id2 = qRegisterMetaType<eMessageType>("eMessageType");
 const int id3 = qRegisterMetaType<QVector<QPair<int, int>>>("QVector<QPair<int, int>>");
 const int id4 = qRegisterMetaType<QVector<double>>("QVector<double>");
 
+constexpr bool dbg = true;
+
 Measure::Measure(QObject* parent)
     : QObject(parent)
     , m_AdcCfgList {
@@ -29,12 +31,12 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
     for (QPair<int, int> stage : channels) {
         m_beep.play();
 
-        if (connectUpt(ConnectUptToAspt, stage.first) == 2) {
+        if (!dbg && connectUpt(ConnectUptToAspt, stage.first) == 2) {
             emit doMessage(TerminateCheck, 0);
             return;
         }
 
-        if (MI::aspt()->correction() != Error::ASPT_OK) {
+        if (!dbg && MI::aspt()->correction() != Error::ASPT_OK) {
             emit doMessage(CheckAsptConnection, 0);
             return;
         }

@@ -88,6 +88,7 @@ void MeasureModel::addData(int row, int pos, double value)
     m_data[row].addData(pos, value);
     (pos < 3) ? emit dataChanged(index(row, SignalCh0), index(row, MeasureCh0), { Qt::DisplayRole })
               : emit dataChanged(index(row, SignalCh1), index(row, MeasureCh1), { Qt::DisplayRole });
+    save();
 }
 
 int MeasureModel::rowCount(const QModelIndex&) const { return RowCount; }

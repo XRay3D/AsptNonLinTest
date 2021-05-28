@@ -1,6 +1,5 @@
 #pragma once
 
-
 enum ColumnType {
     SignalCh0,
     MeasureDeltaCh0,
@@ -9,12 +8,9 @@ enum ColumnType {
     SignalCh1,
     MeasureDeltaCh1,
     //MeasurePpmCh1,
-    MeasureCh1
+    MeasureCh1,
+    ColumnCount
+
 };
 
-enum {
-    RowCount = 16,
-    ColumnCount = MeasureCh1 + 1
-};
-
-
+enum { RowCount = 16 };

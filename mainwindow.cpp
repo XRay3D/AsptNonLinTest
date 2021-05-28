@@ -1,6 +1,6 @@
 #include "mainwindow.h"
-#include "measuring_interface/devfinder.h"
 #include "measuremodel.h"
+#include "measuring_interface/devfinder.h"
 #include "ui_mainwindow.h"
 #include <QChart>
 #include <QEventLoop>
@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget* parent)
     //    , Stop(QStringLiteral(":/res/image3.png") /*QIcon::fromTheme("draw-rectangle")*/)
     , recentFiles(this, "proto")
 {
+
     QIcon::setThemeName("breeze_xr");
 
     ui->setupUi(this);
@@ -45,9 +46,9 @@ MainWindow::MainWindow(QWidget* parent)
         chartView->setRenderHints(QPainter::Antialiasing);
         chartView->setBackgroundBrush(Qt::white);
     };
-    setupChart(ui->graphicsView_1, "Сопротивление, Ом.\nR1");
-    setupChart(ui->graphicsView_2, "Сопротивление, Ом.\nR2");
-    setupChart(ui->graphicsView_3, "Сопротивление, Ом.\nR1+R2");
+    setupChart(ui->chartView1, "Сопротивление, Ом.\nR1");
+    setupChart(ui->chartView2, "Сопротивление, Ом.\nR2");
+    setupChart(ui->chartView3, "Сопротивление, Ом.\nR1+R2");
 
     connectObjects();
     loadSettings();
@@ -69,30 +70,37 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 void MainWindow::updatePlot(int chNum)
 {
-    auto updateChart = [&](const QVector<int> n, QChartView* graphicsView) {
-        QVector<double> y1(ui->table->model()->getData(chNum, n[0]));
-        QVector<double> y2(ui->table->model()->getData(chNum, n[1]));
-        series[n[2]]->clear();
-        series[n[3]]->clear();
+    auto updateChart = [chNum, this](int AdcCh0, int AdcCh1, int SeriesR0, int SeriesR1, QChartView* graphicsView) {
+        auto y1(ui->table->model()->getData(chNum, AdcCh0));
+        auto y2(ui->table->model()->getData(chNum, AdcCh1));
+        series[SeriesR0]->clear();
+        series[SeriesR1]->clear();
         if (y1.size() > 1 || y2.size() > 1) {
-            for (int x = 0, end = y1.size(); x < end; ++x)
-                series[n[2]]->append(x + 1, y1[x]);
-            for (int x = 0, end = y2.size(); x < end; ++x)
-                series[n[3]]->append(x + 1, y2[x]);
-            graphicsView->chart()->axes(Qt::Horizontal).first()->setRange(1, qMax(y1.size(), y2.size())); /*axisX*/
+            QPolygonF data(y1.size());
+            double ctr {};
+            for (auto var : y1)
+                data[ctr] = { ctr + 1, var }, ++ctr;
+            series[SeriesR0]->replace(data);
+            ctr = {};
+            for (auto var : y2)
+                data[ctr] = { ctr + 1, var }, ++ctr;
+            series[SeriesR1]->replace(data);
             y1.append(y2);
-            std::sort(y1.begin(), y1.end());
-            graphicsView->chart()->axes(Qt::Vertical).first()->setRange(y1.first(), y1.last()); /*axisY*/
+
+            auto [min, max] = std::ranges::minmax_element(y1);
+
+            graphicsView->chart()->axes(Qt::Vertical).first()->setRange(*min, *max);
+            graphicsView->chart()->axes(Qt::Horizontal).first()->setRange(1.0, qMax(y1.size(), y2.size()));
         } else {
             double d = 0.0;
-            series[n[2]]->append(d, d);
-            series[n[3]]->append(d, d);
+            series[SeriesR0]->append(d, d);
+            series[SeriesR1]->append(d, d);
         }
     };
 
-    updateChart({ 0, 3, 0, 1 }, ui->graphicsView_1);
-    updateChart({ 1, 4, 2, 3 }, ui->graphicsView_2);
-    updateChart({ 2, 5, 4, 5 }, ui->graphicsView_3);
+    updateChart(0, 3, 0, 1, ui->chartView1);
+    updateChart(1, 4, 2, 3, ui->chartView2);
+    updateChart(2, 5, 4, 5, ui->chartView3);
 }
 
 void MainWindow::on_pbUpnRead_clicked()
@@ -193,6 +201,9 @@ void MainWindow::connectObjects()
     connect(MI::measure(), &Measure::doMessage, this, &MainWindow::handleMessage);
 
     /***************** table->model() *****************/
+
+    connect(ui->leAsptSerNum, &QLineEdit::textChanged, ui->table->model(), &MeasureModel::restore);
+
     connect(ui->table, &MyTable::updatePlot, ui->cbxPlot, &QComboBox::setCurrentIndex);
     connect(ui->table, &MyTable::updatePlot, this, &MainWindow::updatePlot);
     connect(ui->cbxPlot, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::updatePlot);
