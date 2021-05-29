@@ -27,10 +27,16 @@ MainWindow::MainWindow(QWidget* parent)
     connectObjects();
     loadSettings();
 
-    tabWidget->setCurrentIndex(0);
     leAsptSerNum->setText("123456789");
-    tabWidget->setCurrentIndex(1);
     tabMeasure->setEnabledMeasure(true);
+
+    tabWidget->setCurrentIndex(1);
+    tabWidget->setTabIcon(0, QIcon::fromTheme("configure-shortcuts"));
+    tabWidget->setTabIcon(1, QIcon::fromTheme("tool-measure"));
+    tabWidget->setTabIcon(2, QIcon::fromTheme("document-edit"));
+    tabWidget->setTabIcon(3, QIcon::fromTheme("office-chart-line"));
+
+    tabWidget->setCurrentIndex(0);
 }
 
 MainWindow::~MainWindow() { }
@@ -255,7 +261,7 @@ void MainWindow::createMenus() {
     //    connect(fileMenu, &QMenu::aboutToShow, [this] { printAct->setEnabled(QFileInfo::exists(curFile)); });
 
     menu = menuBar()->addMenu(tr("&Справка"));
-    action = menu->addAction(QIcon::fromTheme(""), "О &Qt", qApp, &QApplication::aboutQt);
+    action = menu->addAction(QIcon::fromTheme("help-about"), "О &Qt", qApp, &QApplication::aboutQt);
     action->setStatusTip(tr("О библиотеке Qt"));
 }
 
@@ -289,7 +295,7 @@ void MainWindow::setCurrentFile(const QString& fileName) {
     curFile = fileName;
     lastPath = QFileInfo(curFile).path();
     recentFiles.prependToRecentFiles(fileName);
-    setWindowTitle(QFileInfo(curFile).fileName());
+    setWindowTitle(strippedName(curFile));
 }
 
 QString MainWindow::strippedName(const QString& fullFileName) { return QFileInfo(fullFileName).fileName(); }

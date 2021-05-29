@@ -105,7 +105,7 @@ void Measure::run() {
                 }
                 if(dbg) { // NOTE fake measure
                     v = (1 + res % 3) * 100 + dist(rd);
-                    msleep(100);
+                    msleep(10);
                 }
                 if(isInterruptionRequested())
                     return;

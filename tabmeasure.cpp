@@ -12,6 +12,7 @@ TabMeasure::TabMeasure(QWidget* parent)
     , ui(new Ui::TabMeasure) //
 {
     ui->setupUi(this);
+    ui->pbClear->setIcon(QIcon::fromTheme("list-remove"));
     connect(ui->pbStartMeasure, &QPushButton::clicked, this, &TabMeasure::onPbStartStopClicked);
     connect(ui->chbxDelta, &QCheckBox::toggled, ui->tableView, &MyTable::enableDelta);
 }

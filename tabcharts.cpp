@@ -11,23 +11,25 @@ TabCharts::TabCharts(QWidget* parent)
 {
     ui->setupUi(this);
 
-    auto setupChart = [&](QChartView* chartView, const QString& name) {
+    auto setupChart = [this](QChartView* chartView, const QString& name) {
         QChart* chart = new QChart();
         QLineSeries* s;
 
         s = new QLineSeries(chart);
-        s->setName("Подканал 0");
+        s->setName("0");
         chart->addSeries(s);
         series.emplace_back(s);
 
         s = new QLineSeries(chart);
-        s->setName("Подканал 1");
+        s->setName("1");
         chart->addSeries(s);
         series.emplace_back(s);
 
         chart->createDefaultAxes();
         chart->layout()->setContentsMargins(0, 0, 0, 0);
         chart->legend()->setAlignment(Qt::AlignRight);
+        //        chart->legend()->setVisible(chartView == ui->chartView3);
+
         chart->setBackgroundRoundness(0);
         chart->setMargins(QMargins(0, 0, 0, 0));
         chart->setTheme(QChart::ChartThemeLight);

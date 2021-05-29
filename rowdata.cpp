@@ -17,13 +17,13 @@ void RowData::clearData() {
         if(pos < 3) {
             m_cellText[MeasureCh0] = QString("%1").arg(0.0, 0, 'f', 6).replace('.', ',');
             color[AdcCh0] = QColor::fromHsv(0, 50, 255);
-            icon[AdcCh0] = QIcon::fromTheme("icon1");
+            icon[AdcCh0] = QIcon::fromTheme("error");
             m_cellText[SignalCh0] = QString::fromStdString(m_dataText[R1_CH0] + m_dataText[R2_CH0] + m_dataText[R3_CH0]).replace('.', ',');
             m_cellText[MeasureDeltaCh0] = QString::fromStdString(m_deltaText[R1_CH0] + m_deltaText[R2_CH0] + m_deltaText[R3_CH0]).replace('.', ',');
         } else {
             m_cellText[MeasureCh1] = QString("%1").arg(0.0, 0, 'f', 6).replace('.', ',');
             color[AdcCh1] = QColor::fromHsv(0, 50, 255);
-            icon[AdcCh1] = QIcon::fromTheme("icon1");
+            icon[AdcCh1] = QIcon::fromTheme("error");
             m_cellText[SignalCh1] = QString::fromStdString(m_dataText[R1_CH1] + m_dataText[R2_CH1] + m_dataText[R3_CH1]).replace('.', ',');
             m_cellText[MeasureDeltaCh1] = QString::fromStdString(m_deltaText[R1_CH1] + m_deltaText[R2_CH1] + m_deltaText[R3_CH1]).replace('.', ',');
         }
@@ -67,13 +67,13 @@ void RowData::update(const int pos) {
         delta = abs(delta);
         if(delta > m_max || delta == 0.0) {
             color[ch] = QColor::fromHsv(0, 50, 255);
-            icon[ch] = QIcon::fromTheme("icon1");
+            icon[ch] = QIcon::fromTheme("error");
         } else if(delta < m_min) {
             color[ch] = QColor::fromHsv(120, 50, 255);
-            icon[ch] = QIcon::fromTheme("icon2");
+            icon[ch] = QIcon::fromTheme("ok");
         } else {
             color[ch] = QColor::fromHsv(120 - static_cast<int>((120 / (m_max - m_min)) * (delta - m_min)), 50, 255);
-            icon[ch] = QIcon::fromTheme("icon3");
+            icon[ch] = QIcon::fromTheme("atention");
         }
     };
 

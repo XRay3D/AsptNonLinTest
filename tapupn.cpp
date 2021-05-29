@@ -12,6 +12,10 @@ TapUpn::TapUpn(QWidget* parent)
 {
     ui->setupUi(this);
 
+    ui->pbUpnRead->setIcon(QIcon::fromTheme("document-import"));
+    ui->pbUpnWrite->setIcon(QIcon::fromTheme("document-export"));
+    ui->label_14->setPixmap(QPixmap(":/image10.png"));
+
     setEnabled(false);
 
     connect(this, &TapUpn::setResistor, MI::upn(), &Upn::setResistor);

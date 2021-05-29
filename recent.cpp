@@ -10,7 +10,7 @@ Recent::Recent(QObject* parent, QString&& recentFilesKey)
 }
 
 void Recent::createMenu(QMenu* fileMenu, const QString& menuName) {
-    recentMenu = fileMenu->addMenu(menuName);
+    recentMenu = fileMenu->addMenu(QIcon::fromTheme("deep-history"), menuName);
     connect(recentMenu, &QMenu::aboutToShow, this, &Recent::updateRecentFileActions);
     recentFileSubMenuAct = recentMenu->menuAction();
 
