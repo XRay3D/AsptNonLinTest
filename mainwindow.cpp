@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget* parent)
     , recentFiles(this, "proto")
     , model{new MeasureModel(this)} //
 {
+    // NOTE need for usi in other clases.
     m_instance = this;
 
     setupUi(this);
@@ -26,11 +27,9 @@ MainWindow::MainWindow(QWidget* parent)
     tabUpn->setUiWidgets(cbxUpn, leUpnSerNum);
     connectObjects();
     loadSettings();
+    leAsptSerNum->setText("123456789"); // NOTE need in debug
+    tabMeasure->setEnabledMeasure(true); // NOTE need in debug
 
-    leAsptSerNum->setText("123456789");
-    tabMeasure->setEnabledMeasure(true);
-
-    tabWidget->setCurrentIndex(1);
     tabWidget->setTabIcon(0, QIcon::fromTheme("configure-shortcuts"));
     tabWidget->setTabIcon(1, QIcon::fromTheme("tool-measure"));
     tabWidget->setTabIcon(2, QIcon::fromTheme("document-edit"));
@@ -47,7 +46,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         QMessageBox::warning(this, "", "Идёт проверка!");
         event->ignore();
     } else
-        //    if(measure && QMessageBox::question(this, "", "Идёт проверка. Прекратить её?", QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes) {
+        // TODO   if(measure && QMessageBox::question(this, "", "Идёт проверка. Прекратить её?", QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes) {
         //        QEventLoop eventLoop;
         //        connect(measure, &QThread::finished, [&eventLoop] { eventLoop.exit(); });
         //        measure->requestInterruption();

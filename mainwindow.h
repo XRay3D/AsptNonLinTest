@@ -50,7 +50,6 @@ private:
     void currentIndexChanged(int index);
 
     void connectObjects();
-    void resistorClicked();
 
     void onPbFindDevicesClicked(bool checked = {});
 
@@ -60,16 +59,13 @@ private:
     // settings
     void loadSettings();
     void saveSettings();
-    // tableView
-    void tableWidgetCheckAll(bool checked);
-    void tableWidgetCleaner();
+
     // File
     void createMenus();
 
     void openFile(const QString& fileName);
     void saveFile(const QString& fileName);
     void setCurrentFile(const QString& fileName);
-    void updateRecentFileActions();
 
     QString strippedName(const QString& fullFileName);
 
