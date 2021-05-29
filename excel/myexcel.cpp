@@ -1,6 +1,7 @@
 #include "myexcel.h"
 #include "excel.h"
-#include "mytablemodel.h"
+#include "measuremodel.h"
+
 #include <QApplication>
 #include <QDebug>
 #include <QFileInfo>
@@ -30,7 +31,7 @@ void MyExcel::closeAll() const {
         excel->ActiveWorkbook()->Close(false);
 }
 
-void MyExcel::loadFile(const QString& fileName, MyTableModel* m_model) {
+void MyExcel::loadFile(const QString& fileName, MeasureModel* m_model) {
     closeAll();
     excel->Workbooks()->Open(fileName);
     if(excel->Workbooks()->Count()) {
@@ -47,7 +48,7 @@ void MyExcel::loadFile(const QString& fileName, MyTableModel* m_model) {
     }
 }
 
-void MyExcel::saveFile(const QString& fileName, const QString& asptNum, const QString& fio, MyTableModel* m_model) {
+void MyExcel::saveFile(const QString& fileName, const QString& asptNum, const QString& fio, MeasureModel* m_model) {
     closeAll();
     const bool newFile = !QFileInfo::exists(fileName.trimmed());
     excel->Workbooks()->Open(newFile ? qApp->applicationDirPath() + "/blank.xlsx"

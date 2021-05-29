@@ -1,19 +1,16 @@
 #pragma once
 
 #include <QObject>
-#include <QSettings>
 
+class QSettings;
 class QAction;
 class QMenu;
-class MainWindow;
 
 class Recent : public QObject {
     Q_OBJECT
 
-    MainWindow* mainWindow;
-
 public:
-    explicit Recent(MainWindow* mainWindow, QString&& recentFilesKey);
+    explicit Recent(QObject* parent, QString&& recentFilesKey);
 
     enum { MaxRecentFiles = 20 };
     void createMenu(QMenu* fileMenu, const QString& menuName);
@@ -35,5 +32,4 @@ private:
     QAction* recentFileSeparator = nullptr;
     QAction* recentFileSubMenuAct = nullptr;
     QAction* recentFileActs[MaxRecentFiles + 1];
-signals:
 };

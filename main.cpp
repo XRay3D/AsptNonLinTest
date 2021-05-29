@@ -2,8 +2,7 @@
 #include "measuring_interface/mi.h"
 #include <QApplication>
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
     QApplication::setOrganizationName("XrSoft");
     QApplication::setApplicationName("AsptNonLinTest");
@@ -21,6 +20,8 @@ int main(int argc, char* argv[])
     //        a.setStyleSheet(in.readAll());
     //        file.close();
     //    }
+
+    QIcon::setThemeName("breeze_xr");
 
     MainWindow w;
     w.show();

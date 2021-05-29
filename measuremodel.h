@@ -13,7 +13,7 @@ public:
     MeasureModel(QObject* parent = nullptr);
     ~MeasureModel() override;
     void setRowsEnabled(const std::vector<Qt::CheckState>& checkStates, Qt::Orientation);
-
+    auto rowEnabled() const { return m_rowEnabled; }
     void setMax(double max);
     void setMin(double min);
     void setSkip(int skip);
@@ -25,6 +25,8 @@ public:
     const RowData& getData(int row) const;
     void addData(int row, int pos, double value);
 
+signals:
+    void updateChart(int row);
     // QAbstractItemModel interface
 public:
     int rowCount(const QModelIndex& = {}) const override;
@@ -39,6 +41,14 @@ public:
 
 private:
     QString m_backupName;
-    RowData m_data[16];
-    bool m_rowEnabled[16];
+    RowData m_data[RowCount];
+    struct
+    {
+        Qt::CheckState data[RowCount];
+        auto& operator[](int i) { return data[i]; }
+        auto& operator[](int i) const { return data[i]; }
+        auto begin() { return data; }
+        auto end() { return data + RowCount; }
+    } m_rowEnabled;
+    //    Qt::CheckState m_rowEnabled[RowCount];
 };

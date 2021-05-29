@@ -1,36 +1,34 @@
 #pragma once
 
+#include <QMutex>
 #include <QSemaphore>
 #include <QSound>
+#include <QThread>
+#include <QWaitCondition>
 
-enum eMessageType {
-    ConnectUptToAspt,
-    CheckFinished,
-    TerminateCheck,
-    CheckUptConnection,
-    CheckAsptConnection,
-    CheckUptToAsptConnection,
-};
+class MeasureModel;
 
-class Measure : public QObject {
+class Measure : public QThread {
     Q_OBJECT
+    MeasureModel* const model;
+    QMutex mutex;
+    QSound m_beep;
+    QString const m_AdcCfgList[2];
+    QWaitCondition waiter;
+    int const measuresCount;
 
 public:
-    explicit Measure(QObject* parent = 0);
-
-    void measure(const QVector<QPair<int, int>>& channels, int points);
-    void stopWork(int count);
+    explicit Measure(MeasureModel* model, int measuresCount, QObject* parent = nullptr);
+    void resume() { waiter.wakeAll(); }
 
 signals:
-    void measureReady(const double value, int ch, int r, int num);
-    void doMessage(eMessageType msgType, int row);
+    void showMessage(const QString& msg, const QVector<int>& buttons, int* ret);
+    void updateProgressVal(int);
 
 private:
-    bool checkStop();
-    void resetSemaphore();
-    int connectUpt(eMessageType msgType, int row);
+    template <class... Buttons>
+    int message(const QString& msg, Buttons... buttons);
 
-    const QString m_AdcCfgList[2];
-    QSound m_beep;
-    QSemaphore m_semaphore;
+protected:
+    void run() override;
 };

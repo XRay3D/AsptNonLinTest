@@ -1,8 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>icon1.svg</file>
-        <file>icon2.svg</file>
-        <file>icon3.svg</file>
         <file>image10.png</file>
         <file>icons/breeze_xr/index.theme</file>
         <file>icons/breeze_xr/actions/16/accept_signal.svg</file>
@@ -3293,5 +3290,9 @@
         <file>icons/breeze_xr/status/64/security-high.svg</file>
         <file>icons/breeze_xr/status/64/security-low.svg</file>
         <file>icons/breeze_xr/status/64/security-medium.svg</file>
+        <file>icons/breeze_xr/actions/24/icon1.svg</file>
+        <file>icons/breeze_xr/actions/24/icon2.svg</file>
+        <file>icons/breeze_xr/actions/24/icon3.svg</file>
+        <file>icons/breeze_xr/desktop.ini</file>
     </qresource>
 </RCC>

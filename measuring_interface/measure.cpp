@@ -1,100 +1,125 @@
 #include "measure.h"
+#include "measuremodel.h"
 #include "mi.h"
 #include <QCoreApplication>
+#include <QMessageBox>
 #include <QSerialPortInfo>
+#include <random>
 
-const int id2 = qRegisterMetaType<eMessageType>("eMessageType");
-const int id3 = qRegisterMetaType<QVector<QPair<int, int>>>("QVector<QPair<int, int>>");
-const int id4 = qRegisterMetaType<QVector<double>>("QVector<double>");
+const int id[]{
+    qRegisterMetaType<QVector<int>>("QVector<int>"),
+};
 
+// NOTE true on release
 constexpr bool dbg = true;
 
-Measure::Measure(QObject* parent)
-    : QObject(parent)
-    , m_AdcCfgList {
-        "|1|1|1|0|0|0|3|6|28|3|0|0|5|0|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|220|0|\0",
-        "|1|1|1|0|0|0|3|6|28|3|0|0|5|1|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|221|0|\0"
-    }
-    , m_beep("beep.wav", this)
+Measure::Measure(MeasureModel* model, int measuresCount, QObject* parent)
+    : QThread{parent}
+    , model{model}
+    , m_beep{"beep.wav", this}
+    , m_AdcCfgList{
+          "|1|1|1|0|0|0|3|6|28|3|0|0|5|0|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|220|0|\0",
+          "|1|1|1|0|0|0|3|6|28|3|0|0|5|1|20|6|1|28|3|0|0|5|6|20|6|1|28|3|0|0|5|5|20|6|1|0|0|0|0|5|0|1|1|1|0|0|0|0|0|0|1|1|1|0|0|0|0|0|0|1|1|1|221|0|\0",
+      }
+    , measuresCount{measuresCount} //
 {
 }
+template <class... Buttons>
+int Measure::message(const QString& msg, Buttons... buttons) {
+    qDebug(__FUNCTION__);
+    int ret{};
+    mutex.lock();
+    emit showMessage(msg, {buttons...}, &ret);
+    waiter.wait(&mutex);
+    mutex.unlock();
+    return ret;
+}
 
-void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
-{
-    resetSemaphore();
+void Measure::run() {
+    std::random_device rd; // NOTE random_device for debuging without conected devices
+    std::uniform_real_distribution<double> dist(-0.005, +0.005);
 
-    if (MI::aspt()->initialize() != Error::ASPT_OK) {
-        emit doMessage(CheckAsptConnection, 0);
+    if(!dbg && MI::aspt()->initialize() != Error::ASPT_OK) {
+        message("Нет свяи с АСПТ!", QMessageBox::Ok);
         return;
     }
 
-    for (QPair<int, int> stage : channels) {
+    int ctr{};
+
+    for(int row = 0; row < RowCount; ++row) {
+        if(model->rowEnabled()[row] == Qt::Unchecked)
+            continue;
+
+        int adcCh = 3;
         m_beep.play();
 
-        if (!dbg && connectUpt(ConnectUptToAspt, stage.first) == 2) {
-            emit doMessage(TerminateCheck, 0);
+        if(!dbg && message(QString("Подключите УПН №%1 в канал %2 АСПТ").arg(MI::upn()->resistors()[6]).arg(row + 1), QMessageBox::Ok, QMessageBox::Abort) == QMessageBox::Abort)
+            return;
+
+        if(!dbg && MI::aspt()->correction() != Error::ASPT_OK) {
+            message("Нет свяи с УПН!", QMessageBox::Ok);
             return;
         }
 
-        if (!dbg && MI::aspt()->correction() != Error::ASPT_OK) {
-            emit doMessage(CheckAsptConnection, 0);
-            return;
-        }
-
-        if (checkStop())
+        if(isInterruptionRequested())
             return;
 
         int res;
         double v = 0.0;
 
-        for (res = 0; res < 6; ++res) {
-            //            if (!MI::upn()->setResistor(res)) {
-            //                emit doMessage(CheckUptConnection, 0);
-            //                return;
-            //            }
+        model->clearData(row);
+
+        for(res = 0; res < 6; ++res) {
+            if(!dbg && !MI::upn()->setResistor(res)) {
+                message("Нет свяи с УПН!", QMessageBox::Ok);
+                return;
+            }
             AdcCfg ADCCfg;
-            if (res < 3) {
-                if (!(stage.second & 0x1)) {
+            if(res < 3) {
+                if(!(adcCh & 0x1)) {
                     res = 2;
                     continue;
                 }
                 ADCCfg.setPack(m_AdcCfgList[0]);
             } else {
-                if (!(stage.second & 0x2)) {
+                if(!(adcCh & 0x2)) {
                     res = 6;
                     continue;
                 }
                 ADCCfg.setPack(m_AdcCfgList[1]);
             }
 
-            const quint8 channel = stage.first;
-            ADCCfg.setMeasureChannel({ channel, channel, channel, channel, channel, channel });
+            quint8 cfg = row;
+            ADCCfg.setMeasureChannel({cfg, cfg, cfg, cfg, cfg, cfg});
+            cfg = sr150;
+            ADCCfg.setSupportingResistor({cfg, cfg, cfg, cfg, cfg, cfg});
+            cfg = c10;
+            ADCCfg.setValuePolarityCurrent({cfg, cfg, cfg, cfg, cfg, cfg});
 
-            const quint8 resistor = sr150;
-            ADCCfg.setSupportingResistor({ resistor, resistor, resistor, resistor, resistor, resistor });
+            msleep(100);
 
-            const quint8 current = c10;
-            ADCCfg.setValuePolarityCurrent({ current, current, current, current, current, current });
-
-            thread()->msleep(100);
-            //            bool fl = false;
-            for (int i = 0; i < points; ++i) {
-                //                do {
-                //                    if (checkStop())
-                //                        return;
-                if (checkStop())
-                    return;
-                if (MI::aspt()->getMeasureValue(ADCCfg, vtR4W, 1.0, v) != 0) {
-                    emit doMessage(CheckAsptConnection, 0);
+            for(int i = 0; i < measuresCount; ++i) {
+                if(!dbg && MI::aspt()->getMeasureValue(ADCCfg, vtR4W, 1.0, v) != 0) {
+                    message("Нет свяи с АСПТ!", QMessageBox::Ok);
                     return;
                 }
+                if(dbg) { // NOTE fake measure
+                    v = (1 + res % 3) * 100 + dist(rd);
+                    msleep(100);
+                }
+                if(isInterruptionRequested())
+                    return;
+
+                model->addData(row, res, v);
+
+                //        QMessageBox::warning(this, ui->leAsptSerNum->text(), tr("Проверь подключение УПН(%2) к каналу №%1 АСПТ!").arg(row + 1).arg(ui->leUpnSerNum->text()), tr("Хорошо"), "");
                 //                    qDebug() << v;
                 //                    switch (res) {
                 //                    case 2:
                 //                    case 5:
                 //                        if (290 > v || 310 < v) {
                 //                            fl = true;
-                //                            emit doMessage(CheckUptToAsptConnection, stage.first);
+                //                            // NOTE emit doMessage(CheckUptToAsptConnection, asptCh);
                 //                            while (!checkStop())
                 //                                continue;
                 //                        } else
@@ -103,42 +128,19 @@ void Measure::measure(const QVector<QPair<int, int>>& channels, int points)
                 //                    default:
                 //                        if (140 > v || 160 < v) {
                 //                            fl = true;
-                //                            emit doMessage(CheckUptToAsptConnection, stage.first);
+                //                            // NOTE emit doMessage(CheckUptToAsptConnection, asptCh);
                 //                            while (!checkStop())
                 //                                continue;
                 //                        } else
                 //                            fl = false;
                 //                        break;
                 //                    }
-                //                    thread()->msleep(200);
+                //                    msleep(200);
                 //                } while (fl);
-                emit measureReady(v, stage.first, res, i);
+                //                emit measureReady(v, asptCh, res, i);
+                emit updateProgressVal(++ctr);
             }
         }
     }
     m_beep.play();
-    emit doMessage(CheckFinished, 0);
-}
-
-void Measure::stopWork(int count) { m_semaphore.release(count); }
-
-bool Measure::checkStop() { return m_semaphore.tryAcquire(); }
-
-void Measure::resetSemaphore()
-{
-    if (m_semaphore.available())
-        m_semaphore.acquire(m_semaphore.available());
-}
-
-int Measure::connectUpt(eMessageType msgType, int row)
-{
-    emit doMessage(msgType, row);
-    int fl = 0;
-    while (!fl) {
-        thread()->msleep(100);
-        QCoreApplication::processEvents(QEventLoop::AllEvents); //call void AsptUpt::stopWork()
-        fl = m_semaphore.available();
-    }
-    m_semaphore.acquire(m_semaphore.available());
-    return fl;
 }

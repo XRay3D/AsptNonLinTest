@@ -1,100 +1,68 @@
 #pragma once
 
+#include "recent.h"
+#include "ui_mainwindow.h"
+
 #include <QDateTimeEdit>
-#include <QEvent>
-#include <QLabel>
-#include <QLineSeries>
-#include <QList>
-#include <QMainWindow>
 #include <QProgressBar>
-#include <QSerialPort>
-#include <QSerialPortInfo>
-#include <QTimer>
 #include <QtWinExtras>
 
-#include "measuring_interface/mi.h"
-#include "mytable.h"
-#include "recent.h"
-
-QT_CHARTS_USE_NAMESPACE
-
-class QAction;
-class QMenu;
-class QTableWidgetItem;
-class QCustomPlot;
-
 class DevFinder;
-namespace Ui {
-class MainWindow;
-}
 
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow, public Ui::MainWindow {
     Q_OBJECT
     friend class Recent;
+    friend class TabMeasure;
+    static inline MainWindow* m_instance;
 
 public:
-    explicit MainWindow(QWidget* parent = 0);
+    explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
+    static MainWindow* instance() { return m_instance; }
 
 protected:
     void closeEvent(QCloseEvent* event);
 
-private slots:
-    void updatePlot(int chNum);
-    void on_pbUpnRead_clicked();
-    void on_pbUpnWrite_clicked();
-    void setProgressVisible(bool fl);
-    void currentIndexChanged(int index);
-
-signals:
-    void goMeasure(const QVector<QPair<int, int>>&, int);
-    void stopWork(int count = 1);
-    void setResistor(int r = 0);
-
 private:
-    Ui::MainWindow* ui;
-
 #ifndef linux
     QWinTaskbarButton* taskbarButton;
     QWinTaskbarProgress* taskbarProgress;
 #endif
 
-    QIcon Start;
-    QIcon Stop;
-
     Recent recentFiles;
 
+    DevFinder* finder = nullptr;
+    MeasureModel* model = nullptr;
     QDateTimeEdit timeEdit;
     QElapsedTimer elapsedTimer;
+    QEventLoop eventLoop;
     QLabel lbRemainingTime;
     QProgressBar progressBar;
     QString curFile;
     QString lastPath;
-    QString messageTitle;
     QTimer statusBarTimer;
-    QVector<QLineSeries*> series;
-    QVector<QPair<int, int>> channels;
-    DevFinder* finder = nullptr;
+    int elapsedMs{};
 
     void setProgressMax(int max);
     void setProgressVal(int val);
 
-    int elapsedMs;
+    void setProgressVisible(bool fl);
+    void currentIndexChanged(int index);
 
     void connectObjects();
     void resistorClicked();
-    // handles
 
+    void onPbFindDevicesClicked(bool checked = {});
+
+    // handles
     void devFinderFinished();
-    void handleMessage(eMessageType msgType, int row);
-    void handleMeasure(const double value, int ch, int r);
+
     // settings
     void loadSettings();
     void saveSettings();
-    // table
+    // tableView
     void tableWidgetCheckAll(bool checked);
     void tableWidgetCleaner();
-    bool tableWidgetUpdated;
     // File
     void createMenus();
 

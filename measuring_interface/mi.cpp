@@ -4,15 +4,12 @@ MI::MI() {
     if(!semafore.available()) {
         m_aspt = new Aspt;
         m_upn = new Upn;
-        m_measure = new Measure;
 
         m_aspt->moveToThread(&thread);
-        m_measure->moveToThread(&thread);
         m_upn->moveToThread(&thread);
 
-        thread.connect(&thread, &QThread::finished, m_aspt, &Measure::deleteLater);
-        thread.connect(&thread, &QThread::finished, m_measure, &Measure::deleteLater);
-        thread.connect(&thread, &QThread::finished, m_upn, &Upn::deleteLater);
+        thread.connect(&thread, &QThread::finished, m_aspt, &QObject::deleteLater);
+        thread.connect(&thread, &QThread::finished, m_upn, &QObject::deleteLater);
 
         thread.start(QThread::NormalPriority);
     }

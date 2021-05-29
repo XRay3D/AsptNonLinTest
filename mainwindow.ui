@@ -37,7 +37,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabDevices">
        <attribute name="title">
@@ -156,6 +156,10 @@
              </property>
              <property name="text">
               <string>Поиск приборов.</string>
+             </property>
+             <property name="icon">
+              <iconset theme="media-playback-start">
+               <normaloff>.</normaloff>.</iconset>
              </property>
              <property name="checkable">
               <bool>true</bool>
@@ -399,463 +403,35 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabMeasure">
+      <widget class="TabMeasure" name="tabMeasure">
        <property name="enabled">
         <bool>true</bool>
        </property>
        <attribute name="title">
         <string>Измерение</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <property name="leftMargin">
-         <number>6</number>
-        </property>
-        <property name="topMargin">
-         <number>6</number>
-        </property>
-        <property name="rightMargin">
-         <number>6</number>
-        </property>
-        <property name="bottomMargin">
-         <number>6</number>
-        </property>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="pbClear">
-          <property name="text">
-           <string>Отчистить</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="chbxDelta">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>∆</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1" colspan="2">
-         <widget class="MyTable" name="table"/>
-        </item>
-        <item row="2" column="1" colspan="2">
-         <widget class="QPushButton" name="pbStartStop">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Начать проверку</string>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>:/res/image2.png</normaloff>:/res/image2.png</iconset>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </widget>
-      <widget class="QWidget" name="tabUpn">
+      <widget class="TapUpn" name="tabUpn">
        <property name="enabled">
         <bool>true</bool>
        </property>
        <attribute name="title">
         <string>УПН</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <property name="leftMargin">
-         <number>6</number>
-        </property>
-        <property name="topMargin">
-         <number>6</number>
-        </property>
-        <property name="rightMargin">
-         <number>6</number>
-        </property>
-        <property name="bottomMargin">
-         <number>6</number>
-        </property>
-        <item>
-         <widget class="QGroupBox" name="groupBox_3">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="title">
-           <string>GroupBox</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_4">
-           <property name="leftMargin">
-            <number>6</number>
-           </property>
-           <property name="topMargin">
-            <number>6</number>
-           </property>
-           <property name="rightMargin">
-            <number>6</number>
-           </property>
-           <property name="bottomMargin">
-            <number>6</number>
-           </property>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>Значение R2: </string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QDoubleSpinBox" name="dsbxUpnR3">
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::NoButtons</enum>
-             </property>
-             <property name="suffix">
-              <string> Ом</string>
-             </property>
-             <property name="decimals">
-              <number>6</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_9">
-             <property name="text">
-              <string>Значение R1: </string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QSpinBox" name="sbxUpnSerNum">
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::NoButtons</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="dsbxUpnR2">
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::NoButtons</enum>
-             </property>
-             <property name="suffix">
-              <string> Ом</string>
-             </property>
-             <property name="decimals">
-              <number>6</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0" colspan="2">
-            <widget class="QPushButton" name="pbUpnRead">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="text">
-              <string>Чтение номера и калибровок</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_11">
-             <property name="text">
-              <string>Значение R1+R2: </string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="0" colspan="2">
-            <widget class="QPushButton" name="pbUpnWrite">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="text">
-              <string>Запись номера и калибровок</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QDoubleSpinBox" name="dsbxUpnR1">
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::NoButtons</enum>
-             </property>
-             <property name="suffix">
-              <string> Ом</string>
-             </property>
-             <property name="decimals">
-              <number>6</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_12">
-             <property name="text">
-              <string>Номер УПН:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="groupBox_4">
-          <property name="title">
-           <string>GroupBox</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_7">
-           <property name="leftMargin">
-            <number>6</number>
-           </property>
-           <property name="topMargin">
-            <number>6</number>
-           </property>
-           <property name="rightMargin">
-            <number>6</number>
-           </property>
-           <property name="bottomMargin">
-            <number>6</number>
-           </property>
-           <item row="0" column="0">
-            <widget class="QPushButton" name="pbUpnR1Ch0">
-             <property name="text">
-              <string>R1 &quot;150 Ом&quot;, канал 0</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="pbUpnR2Ch0">
-             <property name="text">
-              <string>R2 &quot;150 Ом&quot;, канал 0</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QPushButton" name="pbUpnR3Ch0">
-             <property name="text">
-              <string>R1+R2 &quot;300 Ом&quot;, канал 0</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QPushButton" name="pbUpnR1Ch1">
-             <property name="text">
-              <string>R1 &quot;150 Ом&quot;, канал 1</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QPushButton" name="pbUpnR2Ch1">
-             <property name="text">
-              <string>R2 &quot;150 Ом&quot;, канал 1</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QPushButton" name="pbUpnR3Ch1">
-             <property name="text">
-              <string>R1+R2 &quot;300 Ом&quot;, канал 1</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1" rowspan="6">
-            <widget class="QLabel" name="label_14">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="pixmap">
-              <pixmap>:/res/image10.png</pixmap>
-             </property>
-             <property name="scaledContents">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>1</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
       </widget>
-      <widget class="QWidget" name="tabCharts">
+      <widget class="TabCharts" name="tabCharts">
        <property name="enabled">
         <bool>true</bool>
        </property>
        <attribute name="title">
         <string>Графики</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_5">
-        <property name="leftMargin">
-         <number>6</number>
-        </property>
-        <property name="topMargin">
-         <number>6</number>
-        </property>
-        <property name="rightMargin">
-         <number>6</number>
-        </property>
-        <property name="bottomMargin">
-         <number>6</number>
-        </property>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_13">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>№ канала АСПТ:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="cbxPlot">
-          <item>
-           <property name="text">
-            <string>1</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>2</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>3</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>4</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>5</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>6</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>7</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>8</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>9</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>10</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>11</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>12</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>13</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>14</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>15</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>16</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="1" column="0" colspan="2">
-         <widget class="QChartView" name="chartView1"/>
-        </item>
-        <item row="2" column="0" colspan="2">
-         <widget class="QChartView" name="chartView2"/>
-        </item>
-        <item row="3" column="0" colspan="2">
-         <widget class="QChartView" name="chartView3"/>
-        </item>
-       </layout>
       </widget>
      </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
+  <widget class="QMenuBar" name="menuBar_">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -865,7 +441,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QStatusBar" name="statusBar_"/>
   <action name="action_open">
    <property name="text">
     <string>Открыть проект</string>
@@ -900,14 +476,22 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>MyTable</class>
-   <extends>QTableWidget</extends>
-   <header>mytable.h</header>
+   <class>TabCharts</class>
+   <extends>QWidget</extends>
+   <header>tabcharts.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
-   <class>QChartView</class>
-   <extends>QGraphicsView</extends>
-   <header location="global">QChartView</header>
+   <class>TapUpn</class>
+   <extends>QWidget</extends>
+   <header>tapupn.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>TabMeasure</class>
+   <extends>QWidget</extends>
+   <header>tabmeasure.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

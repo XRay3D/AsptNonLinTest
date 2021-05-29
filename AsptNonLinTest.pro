@@ -18,10 +18,13 @@ win32:RC_FILE = myapp.rc
 
 DESTDIR = $$_PRO_FILE_PWD_/bin
 
-FORMS += mainwindow.ui
+FORMS += mainwindow.ui \
+    tabcharts.ui \
+    tabmeasure.ui \
+    tapupn.ui
 
 include(../aspt/aspt.pri)
-#include(excel/excel.pri)
+include(excel/excel.pri)
 include(CommonInterfaces/CommonInterfaces.pri)
 include(MyProtokol/XrProtokol.pri)
 
@@ -35,7 +38,7 @@ DISTFILES += \
 HEADERS += \
     mainwindow.h \
     measuremodel.h \
-    measuring_interface/Upn/upn.h \
+    measuring_interface/upn/upn.h \
     measuring_interface/devfinder.h \
     measuring_interface/measure.h \
     measuring_interface/mi.h \
@@ -43,13 +46,15 @@ HEADERS += \
     mytable.h \
     recent.h \
     rowdata.h \
-    tableparams.h \
+    tabcharts.h \
+    tabmeasure.h \
+    tapupn.h
 
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
     measuremodel.cpp \
-    measuring_interface/Upn/upn.cpp \
+    measuring_interface/upn/upn.cpp \
     measuring_interface/devfinder.cpp \
     measuring_interface/measure.cpp \
     measuring_interface/mi.cpp \
@@ -57,4 +62,7 @@ SOURCES += \
     mytable.cpp \
     recent.cpp \
     rowdata.cpp \
+    tabcharts.cpp \
+    tabmeasure.cpp \
+    tapupn.cpp
 

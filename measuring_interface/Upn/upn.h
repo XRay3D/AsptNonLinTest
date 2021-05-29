@@ -14,7 +14,7 @@ public:
     bool readResistorValue() { return {}; }
     bool setResistor(int) { return {}; }
     bool writeResistorValue(std::vector<double>) { return {}; }
-    std::vector<double> resistors() { return {}; }
+    std::vector<double> resistors() { return {1, 2, 3, 4, 5, 6, 7}; }
 };
 
 //#include "commoninterfaces.h"
@@ -54,7 +54,7 @@ public:
 //    friend class PortControl;
 
 //public:
-//    Upn(QObject* parent = 0);
+//    Upn(QObject*parent = nullptr);
 //    ~Upn();
 
 //    // CommonInterfaces interface
